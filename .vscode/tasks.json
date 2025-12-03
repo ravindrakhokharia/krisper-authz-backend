@@ -1,0 +1,101 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "jest:coverage",
+			"type": "shell",
+			"command": "npm test -- --coverage",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-coverage",
+			"type": "shell",
+			"command": "npm test -- src/permission --coverage",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-files",
+			"type": "shell",
+			"command": "npm test -- src/permission/permission.controller.spec.ts src/permission/permission.service.spec.ts --coverage",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-no-cov",
+			"type": "shell",
+			"command": "npm test -- src/permission/permission.service.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-retry",
+			"type": "shell",
+			"command": "npm test -- src/permission/permission.service.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-controller-retry",
+			"type": "shell",
+			"command": "npm test -- src/permission/permission.controller.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:permission-list",
+			"type": "shell",
+			"command": "npm test -- src/permission-list --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:resource",
+			"type": "shell",
+			"command": "npm test -- src/resource --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:role",
+			"type": "shell",
+			"command": "npm test -- src/role --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:role-service-only",
+			"type": "shell",
+			"command": "npm test -- src/role/role.service.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:role-controller-only",
+			"type": "shell",
+			"command": "npm test -- src/role/role.controller.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:role-permission",
+			"type": "shell",
+			"command": "npm test -- src/role-permission --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:user-role",
+			"type": "shell",
+			"command": "npm test -- src/user-role --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:user-role-service-only",
+			"type": "shell",
+			"command": "npm test -- src/user-role/user-role.service.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:user-role-service-retry",
+			"type": "shell",
+			"command": "npm test -- src/user-role/user-role.service.spec.ts --verbose",
+			"group": "test"
+		},
+		{
+			"label": "jest:user-role-retry",
+			"type": "shell",
+			"command": "npm test -- src/user-role --verbose",
+			"group": "test"
+		}
+	]
+}

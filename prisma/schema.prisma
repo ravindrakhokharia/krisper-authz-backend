@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+model Action {
+  id        Int       @id @default(autoincrement())
+  name      String    @map("name")
+  createdBy String?   @map("created_by") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy String?   @map("updated_by") @db.VarChar(255)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  permissions Permission[]
+
+  @@map("action")
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique @map("name")
+  description String?   @map("description") @db.VarChar(255)
+  createdBy   String?   @map("created_by") @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy   String?   @map("updated_by") @db.VarChar(255) 
+  updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("role")
+}
+
+model Resource {
+  id          String    @id @default(uuid())
+  module      String    @db.VarChar(255)
+  name        String
+  description String?
+  createdBy   String?   @map("created_by") @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy   String?   @map("updated_by") @db.VarChar(255)
+  updatedAt   DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  permissions Permission[]
+
+  @@map("resource")
+}
+
+model Permission {
+  id         String    @id @default(uuid())
+  actionId   Int
+  resourceId String
+  createdBy  String?   @map("created_by") @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy  String?   @map("updated_by") @db.VarChar(255)
+  updatedAt  DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  action   Action   @relation(fields: [actionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  resource Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  rolePermissions RolePermission[]
+
+  @@unique([actionId, resourceId])
+  @@map("permission")
+}
+
+model RolePermission {
+  id           String    @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdBy    String?   @map("created_by") @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy    String?   @map("updated_by") @db.VarChar(255)
+  updatedAt    DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permission")
+}
+
+model UserRole {
+  id        String    @id @default(uuid())
+  userId    String
+  roleId    String
+  createdBy String?   @map("created_by") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy String?   @map("updated_by") @db.VarChar(255)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([userId, roleId])
+  @@map("user_role")
+}
