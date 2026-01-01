@@ -7,12 +7,7 @@ import { ValidationService } from 'src/shared/services/validation.service';
 import { QueryUserRoleDto } from './dto/query-user-role.dto';
 import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
-import {
-  GRANT_TYPES,
-  OAUTH_API_URL,
-  OAUTH_CLIENT_ID,
-  OAUTH_CLIENT_SECRET,
-} from 'src/shared/constants/constant';
+import { OAUTH_API_URL } from 'src/shared/constants/constant';
 
 @Injectable()
 export class UserRoleService {
@@ -33,62 +28,28 @@ export class UserRoleService {
 
     try {
       const oauthApiUrl = OAUTH_API_URL;
-      const clientId = OAUTH_CLIENT_ID;
-      const clientSecret = OAUTH_CLIENT_SECRET;
-
-      const grantType = await firstValueFrom(
-        this.httpService.get<any>(
-          `${oauthApiUrl}/grant-type/${GRANT_TYPES.CLIENT_CREDENTIALS}`,
-        ),
-      );
-
-      const accessToken = await firstValueFrom(
-        this.httpService.post<any>(`${oauthApiUrl}/oauth/token`, {
-          clientId,
-          clientSecret,
-          grantTypeId: grantType.data.id,
-        }),
-      );
 
       const userResponse = await firstValueFrom(
-        this.httpService.post<any>(
-          `${oauthApiUrl}/users/client-users-by-ids`,
-          {
-            ids: [createUserRoleDto.userId],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken.data.accessToken}`,
-            },
-          },
+        this.httpService.get<any>(
+          `${oauthApiUrl}/users/${createUserRoleDto.userId}`,
         ),
       );
 
-      const user = userResponse.data[0];
+      const user = userResponse.data;
       user.roles.push(userRole.role.name);
 
-      const updatedUserResponse = await firstValueFrom(
-        this.httpService.put<any>(
-          `${oauthApiUrl}/users/client-user/${user.id}`,
-          {
-            ...user,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken.data.accessToken}`,
-            },
-          },
-        ),
+      await firstValueFrom(
+        this.httpService.put<any>(`${oauthApiUrl}/users/${user.id}`, {
+          ...user,
+        }),
       );
-
-      console.log('updatedUser', updatedUserResponse.data);
     } catch (error) {
       console.log(error);
 
       if (error instanceof AxiosError) {
         throw new HttpException(
           {
-            message: 'failed to assing role to user',
+            message: 'Failed to assign role to user',
             error: error.response?.data,
           },
           error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
