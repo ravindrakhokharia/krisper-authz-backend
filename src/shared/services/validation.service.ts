@@ -14,7 +14,7 @@ export class ValidationService {
 
     if (!record) {
       throw new BadRequestException(
-        `${this.capitalize(model)} ${'ID is invalid or record not found'}`,
+        `${this.capitalize(model)} ID is invalid or record not found`,
       );
     }
 
