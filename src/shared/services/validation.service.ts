@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { errorMessages } from '../constants/error-messages';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class ValidationService {
 
     if (!record) {
       throw new BadRequestException(
-        `${this.capitalize(model)} ${errorMessages.INVALID_ID}`,
+        `${this.capitalize(model)} ${'ID is invalid or record not found'}`,
       );
     }
 
