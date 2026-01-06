@@ -1,12 +1,22 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class RoleService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   async create(createRoleDto: CreateRoleDto) {
+    const exitRole = await this.prisma.role.findUnique({
+      where: {
+        name: createRoleDto.name,
+      },
+    });
+
+    if (exitRole) {
+      return exitRole;
+    }
+
     const role = await this.prisma.role.create({
       data: {
         name: createRoleDto.name,
@@ -29,10 +39,17 @@ export class RoleService {
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
-    return `This action updates a #${id} role`;
+    const role = await this.prisma.role.update({
+      where: { id },
+      data: updateRoleDto,
+    });
+    return role;
   }
 
   async remove(id: string) {
-    return `This action removes a #${id} role`;
+    const role = await this.prisma.role.delete({
+      where: { id },
+    });
+    return role;
   }
 }

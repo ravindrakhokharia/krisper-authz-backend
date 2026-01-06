@@ -14,6 +14,8 @@ describe('RoleService', () => {
         create: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
       } as any,
     };
 
@@ -39,13 +41,33 @@ describe('RoleService', () => {
         description: 'Admin role',
       } as any;
       const created = { id: 'r1', ...dto } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.role.create as jest.Mock).mockResolvedValue(created);
 
       const res = await service.create(dto);
+      expect(prisma.role.findUnique).toHaveBeenCalledWith({
+        where: { name: dto.name },
+      });
       expect(prisma.role.create).toHaveBeenCalledWith({
         data: { name: dto.name, description: dto.description },
       });
       expect(res).toBe(created);
+    });
+
+    it('should return existing role if name already exists', async () => {
+      const dto: CreateRoleDto = {
+        name: 'admin',
+        description: 'Admin role',
+      } as any;
+      const existing = { id: 'r1', ...dto } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+
+      const res = await service.create(dto);
+      expect(prisma.role.findUnique).toHaveBeenCalledWith({
+        where: { name: dto.name },
+      });
+      expect(prisma.role.create).not.toHaveBeenCalled();
+      expect(res).toBe(existing);
     });
   });
 
@@ -73,16 +95,30 @@ describe('RoleService', () => {
   });
 
   describe('update', () => {
-    it('returns update message', async () => {
-      const res = await service.update('id-1', {} as UpdateRoleDto);
-      expect(res).toBe('This action updates a #id-1 role');
+    it('updates a role', async () => {
+      const dto: UpdateRoleDto = { description: 'New description' };
+      const updated = { id: 'id-1', name: 'admin', ...dto } as any;
+      (prisma.role.update as jest.Mock).mockResolvedValue(updated);
+
+      const res = await service.update('id-1', dto);
+      expect(prisma.role.update).toHaveBeenCalledWith({
+        where: { id: 'id-1' },
+        data: dto,
+      });
+      expect(res).toBe(updated);
     });
   });
 
   describe('remove', () => {
-    it('returns remove message', async () => {
+    it('removes a role', async () => {
+      const deleted = { id: 'id-2', name: 'user' } as any;
+      (prisma.role.delete as jest.Mock).mockResolvedValue(deleted);
+
       const res = await service.remove('id-2');
-      expect(res).toBe('This action removes a #id-2 role');
+      expect(prisma.role.delete).toHaveBeenCalledWith({
+        where: { id: 'id-2' },
+      });
+      expect(res).toBe(deleted);
     });
   });
 });

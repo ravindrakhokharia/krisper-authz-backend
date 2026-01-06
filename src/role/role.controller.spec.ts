@@ -68,19 +68,21 @@ describe('RoleController', () => {
   describe('update', () => {
     it('delegates with id and dto', async () => {
       const dto: UpdateRoleDto = { description: 'updated' } as any;
-      service.update.mockResolvedValue('ok' as any);
+      const updated = { id: 'r1', ...dto } as any;
+      service.update.mockResolvedValue(updated);
       const res = await controller.update('r1', dto);
       expect(service.update).toHaveBeenCalledWith('r1', dto);
-      expect(res).toBe('ok');
+      expect(res).toBe(updated);
     });
   });
 
   describe('remove', () => {
     it('delegates with id', async () => {
-      service.remove.mockResolvedValue('removed' as any);
+      const deleted = { id: 'r1', name: 'deleted' } as any;
+      service.remove.mockResolvedValue(deleted);
       const res = await controller.remove('r1');
       expect(service.remove).toHaveBeenCalledWith('r1');
-      expect(res).toBe('removed');
+      expect(res).toBe(deleted);
     });
   });
 });
