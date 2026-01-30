@@ -33,4 +33,16 @@ export class HelperServices {
       console.error(`Failed to reload casbin for ${moduleName} module `, error);
     }
   }
+
+  capitalize(value?: string): string {
+    if (!value) return '';
+
+    return value
+      .trim()
+      .split('-')
+      .map((word) =>
+        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '',
+      )
+      .join('-');
+  }
 }
