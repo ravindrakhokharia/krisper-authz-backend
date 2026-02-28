@@ -58,7 +58,7 @@ export class UserRoleService {
       throw error;
     }
 
-    return userRole;
+    return { data: userRole, message: 'Role assigned successfully' };
   }
 
   async findAll(query: QueryUserRoleDto) {
@@ -72,19 +72,21 @@ export class UserRoleService {
       whereClause.roleId = roleId;
     }
 
-    const userRole = await this.prisma.userRole.findMany({
+    const userRoles = await this.prisma.userRole.findMany({
       where: whereClause,
       skip: offset,
       take: limit,
     });
-    return userRole;
+
+    const total = await this.prisma.userRole.count({ where: whereClause });
+    return { data: userRoles, pagination: { offset, limit, total } };
   }
 
   findOne(id: string) {
     const userRole = this.prisma.userRole.findUnique({
       where: { id },
     });
-    return userRole;
+    return { data: userRole, message: 'User role fetched successfully' };
   }
 
   update(id: string, updateUserRoleDto: UpdateUserRoleDto) {

@@ -23,11 +23,11 @@ export class PermissionService {
       data: createPermissionDto,
     });
 
-    return permission;
+    return { data: permission, message: 'Permission created successfully' };
   }
 
   async findAll(query: QueryPermissionDto) {
-    const { actionId, resourceId, limit = 100, offset = 0 } = query;
+    const { actionId, resourceId, limit, offset } = query;
     const whereClause: Record<string, any> = {};
 
     if (actionId) {
@@ -41,14 +41,15 @@ export class PermissionService {
       skip: offset,
       take: limit,
     });
-    return permissions;
+    const total = await this.prisma.permission.count({ where: whereClause });
+    return { data: permissions, pagination: { offset, limit, total } };
   }
 
   findOne(id: string) {
     const permission = this.prisma.permission.findUnique({
       where: { id },
     });
-    return permission;
+    return { data: permission, message: 'Permission fetched successfully' };
   }
 
   update(id: string, updatePermissionDto: UpdatePermissionDto) {

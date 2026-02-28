@@ -36,11 +36,14 @@ export class RolePermissionService {
 
     await this.helperService.reloadModuleCasbin(moduleName);
 
-    return rolePermission;
+    return {
+      data: rolePermission,
+      message: 'Role permission created successfully',
+    };
   }
 
   async findAll(query: QueryRolePermissionDto) {
-    const { roleId, permissionId, limit = 100, offset = 0 } = query;
+    const { roleId, permissionId, limit, offset } = query;
     const whereClause: Record<string, any> = {};
 
     if (roleId) {
@@ -54,14 +57,20 @@ export class RolePermissionService {
       skip: offset,
       take: limit,
     });
-    return rolePermissions;
+    const total = await this.prisma.rolePermission.count({
+      where: whereClause,
+    });
+    return { data: rolePermissions, pagination: { offset, limit, total } };
   }
 
   findOne(id: string) {
     const rolePermission = this.prisma.rolePermission.findUnique({
       where: { id },
     });
-    return rolePermission;
+    return {
+      data: rolePermission,
+      message: 'Role permission fetched successfully',
+    };
   }
 
   update(id: string, updateRolePermissionDto: UpdateRolePermissionDto) {

@@ -23,7 +23,7 @@ export class ResourceService {
       },
     });
 
-    return resource;
+    return { data: resource, message: 'Resource created successfully' };
   }
 
   async findAll(query: QueryResourceDto) {
@@ -37,14 +37,18 @@ export class ResourceService {
       skip: query.offset,
       take: query.limit,
     });
-    return resources;
+    const total = await this.prisma.resource.count({ where: whereClause });
+    return {
+      data: resources,
+      pagination: { offset: query.offset, limit: query.limit, total },
+    };
   }
 
   findOne(id: string) {
     const resource = this.prisma.resource.findUnique({
       where: { id },
     });
-    return resource;
+    return { data: resource, message: 'Resource fetched successfully' };
   }
 
   async update(id: string, updateResourceDto: UpdateResourceDto) {

@@ -28,19 +28,19 @@ export class RoleService {
         description: createRoleDto.description,
       },
     });
-    return role;
+    return { data: role, message: 'Role created successfully' };
   }
 
   async findAll() {
     const roles = await this.prisma.role.findMany();
-    return roles;
+    return { data: roles, message: 'Roles fetched successfully' };
   }
 
   async findOne(id: string) {
     const role = await this.prisma.role.findUnique({
       where: { id },
     });
-    return role;
+    return { data: role, message: 'Role fetched successfully' };
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
@@ -48,13 +48,13 @@ export class RoleService {
       where: { id },
       data: updateRoleDto,
     });
-    return role;
+    return { data: role, message: 'Role updated successfully' };
   }
 
   async remove(id: string) {
     const role = await this.prisma.role.delete({
       where: { id },
     });
-    return role;
+    return { data: role, message: 'Role deleted successfully' };
   }
 }

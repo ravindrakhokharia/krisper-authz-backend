@@ -38,6 +38,6 @@ export class PermissionListService {
       action: item.permission.action.name,
     }));
 
-    return result;
+    return { data: result };
   }
 }
