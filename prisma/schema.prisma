@@ -20,10 +20,25 @@ model Action {
   @@map("action")
 }
 
+model Menu {
+  id        String    @id @default(uuid())
+  name      String    @unique @map("name")
+  icon      String?   @map("icon")
+  createdBy String?   @map("created_by") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy String?   @map("updated_by") @db.VarChar(255)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  roleMenus RoleMenu[]
+
+  @@map("menu")
+}
+
 model Role {
   id          String    @id @default(uuid())
   name        String    @unique @map("name")
   description String?   @map("description") @db.VarChar(255)
+  isActive    Boolean   @default(true) @map("is_active")
   createdBy   String?   @map("created_by") @db.VarChar(255)
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedBy   String?   @map("updated_by") @db.VarChar(255)
@@ -31,6 +46,7 @@ model Role {
 
   rolePermissions RolePermission[]
   userRoles       UserRole[]
+  roleMenus       RoleMenu[]
 
   @@map("role")
 }
@@ -97,4 +113,20 @@ model UserRole {
 
   @@unique([userId, roleId])
   @@map("user_role")
+}
+
+model RoleMenu {
+  id        String    @id @default(uuid())
+  roleId    String
+  menuId    String
+  createdBy String?   @map("created_by") @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedBy String?   @map("updated_by") @db.VarChar(255)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([roleId, menuId])
+  @@map("role_menu")
 }

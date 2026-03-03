@@ -10,11 +10,15 @@ import { PermissionModule } from './permission/permission.module';
 import { RolePermissionModule } from './role-permission/role-permission.module';
 import { UserRoleModule } from './user-role/user-role.module';
 import { PermissionListModule } from './permission-list/permission-list.module';
+import { MenuModule } from './menu/menu.module';
+import { RoleMenuModule } from './role-menu/role-menu.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', 'krisper-authz-backend/.env'],
     }),
     PrismaModule,
     RoleModule,
@@ -23,6 +27,9 @@ import { PermissionListModule } from './permission-list/permission-list.module';
     RolePermissionModule,
     UserRoleModule,
     PermissionListModule,
+    MenuModule,
+    RoleMenuModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
