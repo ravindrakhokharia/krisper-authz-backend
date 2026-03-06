@@ -26,7 +26,7 @@ export class MenuController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findAll() {
     return this.menuService.findAll();
   }

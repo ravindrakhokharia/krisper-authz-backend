@@ -26,7 +26,7 @@ export class RoleController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findAll() {
     return this.roleService.findAll();
   }
@@ -38,7 +38,7 @@ export class RoleController {
   }
 
   @Get('name/:name')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   findOneByName(@Param('name') name: string) {
     return this.roleService.findOneByName(name);
   }
