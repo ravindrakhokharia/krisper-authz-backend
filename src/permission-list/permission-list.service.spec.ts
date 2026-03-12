@@ -54,14 +54,14 @@ describe('PermissionListService', () => {
         skip: 0,
         take: 50,
       });
-      expect(res).toEqual([
+      expect(res).toEqual({ data: [
         {
           module: 'sales',
           role: 'admin',
           resource: 'orders',
           action: 'read',
         },
-      ]);
+      ]});
     });
 
     it('applies module filter and pagination', async () => {

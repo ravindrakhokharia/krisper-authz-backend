@@ -14,7 +14,7 @@ describe('RoleController', () => {
       findAll: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
-      remove: jest.fn(),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,12 +76,12 @@ describe('RoleController', () => {
     });
   });
 
-  describe('remove', () => {
+  describe('delete', () => {
     it('delegates with id', async () => {
       const deleted = { id: 'r1', name: 'deleted' } as any;
-      service.remove.mockResolvedValue(deleted);
-      const res = await controller.remove('r1');
-      expect(service.remove).toHaveBeenCalledWith('r1');
+      service.delete.mockResolvedValue(deleted);
+      const res = await controller.delete('r1');
+      expect(service.delete).toHaveBeenCalledWith('r1');
       expect(res).toBe(deleted);
     });
   });

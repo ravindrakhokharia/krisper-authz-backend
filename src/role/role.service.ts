@@ -2,7 +2,6 @@ import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { HelperServices } from 'src/shared/helper/helper.services';
 import { OAUTH_API_URL } from 'src/shared/constants/constant';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -11,7 +10,6 @@ import { HttpService } from '@nestjs/axios';
 export class RoleService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly helperService: HelperServices,
     private readonly httpService: HttpService,
   ) {}
 

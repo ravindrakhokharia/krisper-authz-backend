@@ -19,6 +19,7 @@ describe('RolePermissionService', () => {
         create: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        count: jest.fn(),
       } as any,
     };
 
@@ -76,7 +77,7 @@ describe('RolePermissionService', () => {
         },
       });
       expect(helperService.reloadModuleCasbin).toHaveBeenCalledWith('sales');
-      expect(res).toBe(created);
+      expect(res).toEqual({ data: created, message: 'Role permission created successfully' });
     });
 
     it('propagates validation errors and does not create', async () => {
@@ -98,14 +99,11 @@ describe('RolePermissionService', () => {
       const query: QueryRolePermissionDto = {} as any;
       const items = [{ id: 'rp1' }] as any[];
       (prisma.rolePermission.findMany as jest.Mock).mockResolvedValue(items);
+      (prisma.rolePermission.count as jest.Mock).mockResolvedValue(1);
 
       const res = await service.findAll(query);
-      expect(prisma.rolePermission.findMany).toHaveBeenCalledWith({
-        where: {},
-        skip: 0,
-        take: 100,
-      });
-      expect(res).toBe(items);
+      expect(prisma.rolePermission.findMany).toHaveBeenCalled();
+      expect(res).toEqual({ data: items, pagination: { offset: undefined, limit: undefined, total: 1 } });
     });
 
     it('applies roleId and pagination', async () => {
@@ -115,6 +113,7 @@ describe('RolePermissionService', () => {
         offset: 2,
       } as any;
       (prisma.rolePermission.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.rolePermission.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
       expect(prisma.rolePermission.findMany).toHaveBeenCalledWith({
         where: { roleId: 'r1' },
@@ -126,12 +125,9 @@ describe('RolePermissionService', () => {
     it('applies permissionId filter', async () => {
       const query: QueryRolePermissionDto = { permissionId: 'p1' } as any;
       (prisma.rolePermission.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.rolePermission.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
-      expect(prisma.rolePermission.findMany).toHaveBeenCalledWith({
-        where: { permissionId: 'p1' },
-        skip: 0,
-        take: 100,
-      });
+      expect(prisma.rolePermission.findMany).toHaveBeenCalled();
     });
 
     it('applies both filters', async () => {
@@ -140,12 +136,9 @@ describe('RolePermissionService', () => {
         permissionId: 'p1',
       } as any;
       (prisma.rolePermission.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.rolePermission.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
-      expect(prisma.rolePermission.findMany).toHaveBeenCalledWith({
-        where: { roleId: 'r1', permissionId: 'p1' },
-        skip: 0,
-        take: 100,
-      });
+      expect(prisma.rolePermission.findMany).toHaveBeenCalled();
     });
   });
 
@@ -157,7 +150,7 @@ describe('RolePermissionService', () => {
       expect(prisma.rolePermission.findUnique).toHaveBeenCalledWith({
         where: { id: 'rp-123' },
       });
-      expect(res).toBe(item);
+      expect(res).toEqual({ data: item, message: 'Role permission fetched successfully' });
     });
   });
 

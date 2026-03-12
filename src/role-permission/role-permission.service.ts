@@ -63,8 +63,8 @@ export class RolePermissionService {
     return { data: rolePermissions, pagination: { offset, limit, total } };
   }
 
-  findOne(id: string) {
-    const rolePermission = this.prisma.rolePermission.findUnique({
+  async findOne(id: string) {
+    const rolePermission = await this.prisma.rolePermission.findUnique({
       where: { id },
     });
     return {

@@ -16,6 +16,7 @@ describe('ResourceService', () => {
         create: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        count: jest.fn(),
       } as any,
     };
 
@@ -60,7 +61,7 @@ describe('ResourceService', () => {
       expect(prisma.resource.create).toHaveBeenCalledWith({
         data: dto,
       });
-      expect(res).toBe(created);
+      expect(res).toEqual({ data: created, message: 'Resource created successfully' });
     });
   });
 
@@ -70,13 +71,15 @@ describe('ResourceService', () => {
       const data = [{ id: 'r1' }] as any[];
       (prisma.resource.findMany as jest.Mock).mockResolvedValue(data);
 
+      (prisma.resource.count as jest.Mock).mockResolvedValue(10);
+
       const res = await service.findAll(query);
       expect(prisma.resource.findMany).toHaveBeenCalledWith({
         where: {},
         skip: 0,
         take: 20,
       });
-      expect(res).toBe(data);
+      expect(res).toEqual({ data, pagination: { offset: 0, limit: 20, total: 10 }});
     });
 
     it('filters by module', async () => {
@@ -86,6 +89,7 @@ describe('ResourceService', () => {
         offset: 2,
       } as any;
       (prisma.resource.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.resource.count as jest.Mock).mockResolvedValue(0);
 
       await service.findAll(query);
       expect(prisma.resource.findMany).toHaveBeenCalledWith({
@@ -105,7 +109,7 @@ describe('ResourceService', () => {
       expect(prisma.resource.findUnique).toHaveBeenCalledWith({
         where: { id: 'r-123' },
       });
-      expect(res).toBe(item);
+      expect(res).toEqual({ data: item, message: 'Resource fetched successfully' });
     });
   });
 

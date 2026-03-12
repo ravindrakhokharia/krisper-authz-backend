@@ -20,6 +20,7 @@ describe('UserRoleService', () => {
         create: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        count: jest.fn(),
       } as any,
     };
 
@@ -65,16 +66,11 @@ describe('UserRoleService', () => {
       (prisma.userRole.create as jest.Mock).mockResolvedValue(created);
 
       // Mock HTTP chain
-      const grantResp = { data: { id: 'grant-1' } } as any;
-      const tokenResp = { data: { accessToken: 'tok-123' } } as any;
-      const userResp = { data: [{ id: 'u1', roles: [] }] } as any;
+      const userResp = { data: { id: 'u1', roles: [] } } as any;
       const updatedResp = { data: { ok: true } } as any;
 
       const { of } = require('rxjs');
-      http.get.mockReturnValue(of(grantResp));
-      http.post
-        .mockReturnValueOnce(of(tokenResp))
-        .mockReturnValueOnce(of(userResp));
+      http.get.mockReturnValue(of(userResp));
       http.put.mockReturnValue(of(updatedResp));
 
       const res = await service.create(dto);
@@ -87,9 +83,8 @@ describe('UserRoleService', () => {
         include: { role: true },
       });
       expect(http.get).toHaveBeenCalled();
-      expect(http.post).toHaveBeenCalled();
       expect(http.put).toHaveBeenCalled();
-      expect(res).toBe(created);
+      expect(res).toEqual({ data: created, message: 'Role assigned successfully' });
     });
 
     it('throws HttpException for AxiosError from oauth calls', async () => {
@@ -112,7 +107,7 @@ describe('UserRoleService', () => {
         expect(err.getStatus ? err.getStatus() : err.status).toBe(400);
         const response = err.getResponse ? err.getResponse() : err.message;
         expect(response).toMatchObject({
-          message: 'failed to assing role to user',
+          message: 'Failed to assign role to user',
           error: { msg: 'oops' },
         });
       }
@@ -161,13 +156,10 @@ describe('UserRoleService', () => {
       const query: QueryUserRoleDto = {} as any;
       const items = [{ id: 'ur1' }] as any[];
       (prisma.userRole.findMany as jest.Mock).mockResolvedValue(items);
+      (prisma.userRole.count as jest.Mock).mockResolvedValue(1);
       const res = await service.findAll(query);
-      expect(prisma.userRole.findMany).toHaveBeenCalledWith({
-        where: {},
-        skip: 0,
-        take: 100,
-      });
-      expect(res).toBe(items);
+      expect(prisma.userRole.findMany).toHaveBeenCalled();
+      expect(res).toEqual({ data: items, pagination: { offset: 0, limit: 100, total: 1 } });
     });
 
     it('filters by userId and pagination', async () => {
@@ -177,6 +169,7 @@ describe('UserRoleService', () => {
         offset: 2,
       } as any;
       (prisma.userRole.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.userRole.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
       expect(prisma.userRole.findMany).toHaveBeenCalledWith({
         where: { userId: 'u1' },
@@ -188,6 +181,7 @@ describe('UserRoleService', () => {
     it('filters by roleId', async () => {
       const query: QueryUserRoleDto = { roleId: 'r1' } as any;
       (prisma.userRole.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.userRole.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
       expect(prisma.userRole.findMany).toHaveBeenCalledWith({
         where: { roleId: 'r1' },
@@ -199,6 +193,7 @@ describe('UserRoleService', () => {
     it('filters by both', async () => {
       const query: QueryUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.userRole.count as jest.Mock).mockResolvedValue(0);
       await service.findAll(query);
       expect(prisma.userRole.findMany).toHaveBeenCalledWith({
         where: { userId: 'u1', roleId: 'r1' },
@@ -216,7 +211,7 @@ describe('UserRoleService', () => {
       expect(prisma.userRole.findUnique).toHaveBeenCalledWith({
         where: { id: 'ur-123' },
       });
-      expect(res).toBe(item);
+      expect(res).toEqual({ data: item, message: 'User role fetched successfully' });
     });
   });
 

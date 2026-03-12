@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
-import { HelperServices } from 'src/shared/helper/helper.services';
+import { HelperServices } from '../shared/helper/helper.services';
 
 @Injectable()
 export class MenuService {

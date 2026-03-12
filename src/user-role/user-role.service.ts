@@ -36,6 +36,9 @@ export class UserRoleService {
       );
 
       const user = userResponse.data;
+      if (!user.roles) {
+        user.roles = [];
+      }
       user.roles.push(userRole.role.name);
 
       await firstValueFrom(
@@ -82,8 +85,8 @@ export class UserRoleService {
     return { data: userRoles, pagination: { offset, limit, total } };
   }
 
-  findOne(id: string) {
-    const userRole = this.prisma.userRole.findUnique({
+  async findOne(id: string) {
+    const userRole = await this.prisma.userRole.findUnique({
       where: { id },
     });
     return { data: userRole, message: 'User role fetched successfully' };
