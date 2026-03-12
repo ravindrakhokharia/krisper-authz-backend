@@ -44,8 +44,8 @@ export class ResourceService {
     };
   }
 
-  findOne(id: string) {
-    const resource = this.prisma.resource.findUnique({
+  async findOne(id: string) {
+    const resource = await this.prisma.resource.findUnique({
       where: { id },
     });
     return { data: resource, message: 'Resource fetched successfully' };

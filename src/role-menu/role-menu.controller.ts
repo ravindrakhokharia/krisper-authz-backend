@@ -39,18 +39,18 @@ export class RoleMenuController {
     return this.roleMenuService.findOne(id);
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard)
-  update(
-    @Param('id') id: string,
-    @Body() updateRoleMenuDto: UpdateRoleMenuDto,
-  ) {
-    return this.roleMenuService.update(id, updateRoleMenuDto);
-  }
+  // @Patch(':id')
+  // @UseGuards(JwtAuthGuard)
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateRoleMenuDto: UpdateRoleMenuDto,
+  // ) {
+  //   return this.roleMenuService.update(id, updateRoleMenuDto);
+  // }
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.roleMenuService.remove(id);
-  }
+  // @Delete(':id')
+  // @UseGuards(JwtAuthGuard)
+  // remove(@Param('id') id: string) {
+  //   return this.roleMenuService.remove(id);
+  // }
 }

@@ -66,11 +66,11 @@ export class RoleMenuService {
     };
   }
 
-  update(id: string, updateRoleMenuDto: UpdateRoleMenuDto) {
-    return `This action updates a #${id} roleMenu`;
-  }
+  // update(id: string, updateRoleMenuDto: UpdateRoleMenuDto) {
+  //   return `This action updates a #${id} roleMenu`;
+  // }
 
-  remove(id: string) {
-    return `This action removes a #${id} roleMenu`;
-  }
+  // remove(id: string) {
+  //   return `This action removes a #${id} roleMenu`;
+  // }
 }

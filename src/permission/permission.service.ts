@@ -45,8 +45,8 @@ export class PermissionService {
     return { data: permissions, pagination: { offset, limit, total } };
   }
 
-  findOne(id: string) {
-    const permission = this.prisma.permission.findUnique({
+  async findOne(id: string) {
+    const permission = await this.prisma.permission.findUnique({
       where: { id },
     });
     return { data: permission, message: 'Permission fetched successfully' };

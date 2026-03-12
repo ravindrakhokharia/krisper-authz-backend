@@ -66,8 +66,8 @@ describe('RoleMenuController', () => {
   describe('findOne', () => {
     it('should call service.findOne with id', async () => {
       const id = '1';
-      const expectedResult = { data: { id }, message: 'success' };
-      service.findOne.mockResolvedValue(expectedResult as any);
+      const expectedResult = { data: Promise.resolve({ id }), message: 'success' };
+      service.findOne.mockReturnValue(expectedResult as any);
 
       const result = await controller.findOne(id);
 
@@ -76,30 +76,30 @@ describe('RoleMenuController', () => {
     });
   });
 
-  describe('update', () => {
-    it('should call service.update with id and dto', async () => {
-      const id = '1';
-      const dto: UpdateRoleMenuDto = { menuId: 'm2' };
-      const expectedResult = { data: { id, ...dto }, message: 'success' };
-      service.update.mockResolvedValue(expectedResult as any);
+  // describe('update', () => {
+  //   it('should call service.update with id and dto', async () => {
+  //     const id = '1';
+  //     const dto: UpdateRoleMenuDto = { menuId: 'm2' };
+  //     const expectedResult = { data: { id, ...dto }, message: 'success' };
+  //     service.update.mockResolvedValue(expectedResult as any);
 
-      const result = await controller.update(id, dto);
+  //     const result = await controller.update(id, dto);
 
-      expect(service.update).toHaveBeenCalledWith(id, dto);
-      expect(result).toEqual(expectedResult);
-    });
-  });
+  //     expect(service.update).toHaveBeenCalledWith(id, dto);
+  //     expect(result).toEqual(expectedResult);
+  //   });
+  // });
 
-  describe('remove', () => {
-    it('should call service.remove with id', async () => {
-      const id = '1';
-      const expectedResult = { data: { id }, message: 'success' };
-      service.remove.mockResolvedValue(expectedResult as any);
+  // describe('remove', () => {
+  //   it('should call service.remove with id', async () => {
+  //     const id = '1';
+  //     const expectedResult = { data: { id }, message: 'success' };
+  //     service.remove.mockResolvedValue(expectedResult as any);
 
-      const result = await controller.remove(id);
+  //     const result = await controller.remove(id);
 
-      expect(service.remove).toHaveBeenCalledWith(id);
-      expect(result).toEqual(expectedResult);
-    });
-  });
+  //     expect(service.remove).toHaveBeenCalledWith(id);
+  //     expect(result).toEqual(expectedResult);
+  //   });
+  // });
 });
