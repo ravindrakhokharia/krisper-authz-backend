@@ -1,10 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 
-const prisma = new PrismaClient();
 const OAUTH_API_URL = process.env.OAUTH_API_URL || 'http://localhost:3000';
 
-export async function seedSuperAdminRole() {
+export async function seedSuperAdminRole(prisma: PrismaClient) {
   try {
     console.log('Starting Super Admin role seeding...');
 
@@ -75,12 +74,3 @@ export async function seedSuperAdminRole() {
     );
   }
 }
-
-seedSuperAdminRole()
-  .catch((e) => {
-    console.error('Seeding failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

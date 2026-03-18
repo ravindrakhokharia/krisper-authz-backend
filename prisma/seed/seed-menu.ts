@@ -1,7 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 const menus = [
   { name: 'Dashboard', icon: 'LayoutDashboard' },
   { name: 'Clients', icon: 'Users' },
@@ -45,7 +43,7 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function seedMenus() {
+export async function seedMenus(prisma: PrismaClient) {
   try {
     for (const menu of menus) {
       await prisma.menu.upsert({
@@ -68,12 +66,3 @@ export async function seedMenus() {
     console.error('Error seeding menus:', error);
   }
 }
-
-seedMenus()
-  .catch((e) => {
-    console.error('Seeding failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

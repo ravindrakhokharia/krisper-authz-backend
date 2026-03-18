@@ -1,10 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 const actions = ['create', 'update', 'delete', 'view'];
 
-export async function seedActions() {
+export async function seedActions(prisma: PrismaClient) {
   try {
     actions?.map(async (name, index) => {
       await prisma.action.upsert({
@@ -25,12 +23,3 @@ export async function seedActions() {
     console.error('Error seeding actions:', error);
   }
 }
-
-seedActions()
-  .catch((e) => {
-    console.error('Seeding failed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
