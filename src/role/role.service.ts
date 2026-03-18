@@ -228,8 +228,6 @@ export class RoleService {
         (role: string) => role !== roleName,
       );
 
-      console.log('usreId', userId);
-
       await firstValueFrom(
         this.httpService.put(`${oauthApiUrl}/users/${userId}`, {
           roles: updatedRoles,
@@ -246,8 +244,6 @@ export class RoleService {
   }
 
   private async addRoleToOAuthUser(userId: string, roleName: string) {
-    console.log('event 1', userId);
-
     try {
       const oauthApiUrl = OAUTH_API_URL;
 
