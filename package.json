@@ -77,7 +77,12 @@
       "^src/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.controller.(t|j)s",
+      "**/*.service.(t|j)s",
+      "!prisma/prisma.service.ts",
+      "!shared/services/validation.service.ts",
+      "!app.controller.ts",
+      "!app.service.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

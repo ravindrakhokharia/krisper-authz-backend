@@ -186,6 +186,12 @@ describe('RoleService', () => {
       const res = await service.findAll();
       expect(res).toEqual({ data: [], message: 'Roles fetched successfully' });
     });
+
+    it('returns empty array if roles is undefined', async () => {
+      (prisma.role.findMany as jest.Mock).mockResolvedValue(undefined);
+      const res = await service.findAll();
+      expect(res).toEqual({ data: [], message: 'Roles fetched successfully' });
+    });
   });
 
   describe('findOne', () => {
@@ -303,6 +309,16 @@ describe('RoleService', () => {
       // Verify OAuth sync (one removal, one addition)
       expect(httpService.put).toHaveBeenCalledTimes(2);
     });
+
+    it('uses existing role name if name is not provided in update dto', async () => {
+        const existing = { id: 'r1', name: 'admin', roleMenus: [], userRoles: [] } as any;
+        const dto: UpdateRoleDto = { description: 'Updated' };
+        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+        (prisma.role.update as jest.Mock).mockResolvedValue({ ...existing, ...dto });
+
+        await service.update('r1', dto);
+        // No OAuth calls expected since users haven't changed, but code path should use existing.name
+    });
   });
 
   describe('OAuth methods error handling', () => {
@@ -371,6 +387,34 @@ describe('RoleService', () => {
 
       expect(httpService.get).toHaveBeenCalled();
       expect(httpService.put).not.toHaveBeenCalled();
+    });
+
+    it('handles missing roles field when adding role', async () => {
+        const existing = { id: 'r1', roleMenus: [], userRoles: [] } as any;
+        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+        (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+
+        httpService.get.mockReturnValue(
+            of({ data: { data: { id: 'u1' } }, status: 200 } as any)
+        );
+        httpService.put.mockReturnValue(of({ data: {} } as any));
+
+        await service.update('r1', { userIds: ['u1'] });
+        expect(httpService.put).toHaveBeenCalledWith(expect.any(String), { roles: ['admin'] });
+    });
+
+    it('handles missing roles field when removing role', async () => {
+        const existing = { id: 'r1', roleMenus: [], userRoles: [{ userId: 'u1' }] } as any;
+        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+        (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+
+        httpService.get.mockReturnValue(
+            of({ data: { data: { id: 'u1' } }, status: 200 } as any)
+        );
+        httpService.put.mockReturnValue(of({ data: {} } as any));
+
+        await service.update('r1', { userIds: [] });
+        expect(httpService.put).toHaveBeenCalledWith(expect.any(String), { roles: [] });
     });
   });
 

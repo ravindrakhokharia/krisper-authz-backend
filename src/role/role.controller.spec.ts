@@ -15,11 +15,14 @@ describe('RoleController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      findOneByName: jest.fn(), // Added findOneByName to serviceMock
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RoleController],
-      providers: [{ provide: RoleService, useValue: serviceMock }],
+      providers: [
+        { provide: RoleService, useValue: serviceMock },
+      ],
     }).compile();
 
     controller = module.get<RoleController>(RoleController);
@@ -83,6 +86,16 @@ describe('RoleController', () => {
       const res = await controller.delete('r1');
       expect(service.delete).toHaveBeenCalledWith('r1');
       expect(res).toBe(deleted);
+    });
+  });
+
+  describe('findOneByName', () => {
+    it('delegates with name', async () => {
+      const item = { id: 'r1', name: 'admin' } as any;
+      service.findOneByName.mockResolvedValue(item); // Use the mocked service.findOneByName
+      const res = await controller.findOneByName('admin');
+      expect(service.findOneByName).toHaveBeenCalledWith('admin');
+      expect(res).toBe(item);
     });
   });
 });

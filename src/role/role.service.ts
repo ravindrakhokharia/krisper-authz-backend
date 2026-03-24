@@ -223,8 +223,9 @@ export class RoleService {
       );
 
       user = user.data;
+      const userRoles = user?.roles || [];
 
-      const updatedRoles = user?.roles?.filter(
+      const updatedRoles = userRoles.filter(
         (role: string) => role !== roleName,
       );
 
@@ -253,14 +254,14 @@ export class RoleService {
 
       user = user.data;
 
-      let userRole = user?.roles;
-      const roleExists = user?.roles?.some((role: string) => role === roleName);
+      const userRoles = user?.roles || [];
+      const roleExists = userRoles.some((role: string) => role === roleName);
 
       if (!roleExists) {
-        userRole.push(roleName);
+        userRoles.push(roleName);
         await firstValueFrom(
           this.httpService.put(`${oauthApiUrl}/users/${userId}`, {
-            roles: userRole,
+            roles: userRoles,
           }),
         );
       }

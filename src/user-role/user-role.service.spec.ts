@@ -87,6 +87,27 @@ describe('UserRoleService', () => {
       expect(res).toEqual({ data: created, message: 'Role assigned successfully' });
     });
 
+    it('handles case where user.roles is missing during OAuth update', async () => {
+      const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
+      const created = { id: 'ur-1', role: { name: 'admin' } } as any;
+      (prisma.userRole.create as jest.Mock).mockResolvedValue(created);
+
+      // userResp without roles field
+      const userResp = { data: { id: 'u1' } } as any;
+      const updatedResp = { data: { ok: true } } as any;
+
+      const { of } = require('rxjs');
+      http.get.mockReturnValue(of(userResp));
+      http.put.mockReturnValue(of(updatedResp));
+
+      await service.create(dto);
+
+      expect(http.put).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ roles: ['admin'] }),
+      );
+    });
+
     it('throws HttpException for AxiosError from oauth calls', async () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue({
@@ -147,6 +168,28 @@ describe('UserRoleService', () => {
         fail('Expected error');
       } catch (err: any) {
         expect(err.getStatus()).toBe(500);
+      }
+    });
+
+    it('uses empty object when AxiosError has response but no data', async () => {
+      const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
+      (prisma.userRole.create as jest.Mock).mockResolvedValue({
+        id: 'ur',
+      } as any);
+      const axiosErr = new AxiosError('no data', 'ERR', undefined, undefined, {
+        status: 400,
+        // response.data is missing
+      } as any);
+
+      const { throwError } = require('rxjs');
+      http.get.mockReturnValue(throwError(() => axiosErr));
+
+      try {
+        await service.create(dto);
+        fail('Expected error');
+      } catch (err: any) {
+        expect(err.getStatus()).toBe(400);
+        expect(err.getResponse().error).toBeUndefined();
       }
     });
   });

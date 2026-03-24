@@ -24,4 +24,9 @@ describe("AuthController", () => {
   it("should be defined", () => {
     expect(controller).toBeDefined();
   });
+
+  it("should have authService injected", () => {
+    expect(controller["authService"]).toBeDefined();
+    expect(controller["authService"]).toBe(service);
+  });
 });

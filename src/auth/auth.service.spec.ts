@@ -43,10 +43,59 @@ describe("AuthService", () => {
     expect(result).toEqual(user.data);
   });
 
+  it("returns user when found via sub in payload", async () => {
+    const user = { data: { id: "u1", oauthId: "oauth-1" } };
+    const payload = { sub: "oauth-1" };
+    httpMock.get.mockReturnValue(of({ data: user }));
+    const result = await service.validateUser(payload);
+    expect(result).toEqual(user.data);
+  });
+
+  it("returns user when found via userId in payload", async () => {
+    const user = { data: { id: "u1", oauthId: "oauth-1" } };
+    const payload = { userId: "oauth-1" };
+    httpMock.get.mockReturnValue(of({ data: user }));
+    const result = await service.validateUser(payload);
+    expect(result).toEqual(user.data);
+  });
+
   it("returns null when user not found", async () => {
     const payload = { id: "missing" };
     httpMock.get.mockReturnValue(of({ data: { data: null } }));
     const result = await service.validateUser(payload);
     expect(result).toBeNull();
+  });
+
+  it("returns null when response data is missing data field", async () => {
+    const payload = { id: "u1" };
+    httpMock.get.mockReturnValue(of({ data: {} }));
+    const result = await service.validateUser(payload);
+    expect(result).toBeNull();
+  });
+
+  it("throws UnauthorizedException when payload is missing userId", async () => {
+    const payload = {};
+    await expect(service.validateUser(payload)).rejects.toThrow(
+      "Token payload is missing user id",
+    );
+  });
+
+  it("throws UnauthorizedException when OAUTH_API_URL is not configured", async () => {
+    configMock.get.mockReturnValue(null);
+    const payload = { id: "u1" };
+    await expect(service.validateUser(payload)).rejects.toThrow(
+      "OAUTH_API_URL is not configured",
+    );
+    configMock.get.mockReturnValue("http://oauth-api");
+  });
+
+  it("throws UnauthorizedException when HTTP request fails", async () => {
+    const payload = { id: "u1" };
+    const { throwError } = require("rxjs");
+    (httpMock.get as jest.Mock).mockReturnValue(throwError(() => new Error("Network error")));
+
+    await expect(service.validateUser(payload)).rejects.toThrow(
+      "Unable to validate user from token",
+    );
   });
 });
