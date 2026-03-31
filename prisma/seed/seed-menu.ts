@@ -40,6 +40,7 @@ const menus = [
   { name: 'Shop', icon: 'Shop' },
   { name: 'Customer', icon: 'Customer' },
   { name: 'Whatsapp Chatbot', icon: 'MessageCircle' },
+  { name: 'Service', icon: 'Scissors' },
 ];
 
 function delay(ms: number) {
