@@ -37,6 +37,8 @@ const menus = [
   { name: 'Workflows', icon: 'Workflow' },
   { name: 'Schema builder', icon: 'Database' },
   { name: 'Admin settings', icon: 'Settings' },
+  { name: 'Shop', icon: 'Shop'},
+  { name: 'Customer', icon: 'Customer'},
 ];
 
 function delay(ms: number) {
