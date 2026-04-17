@@ -37,12 +37,13 @@ const menus = [
   { name: 'Workflows', icon: 'Workflow' },
   { name: 'Schema builder', icon: 'Database' },
   { name: 'Admin settings', icon: 'Settings' },
-  { name: 'Shop', icon: 'Shop' },
-  { name: 'Customer', icon: 'Customer' },
-  { name: 'Whatsapp Chatbot', icon: 'MessageCircle' },
-  { name: 'Service', icon: 'Scissors' },
-  { name: 'Appointment', icon: 'Calendar' },
+  { name: 'Shop', icon: 'Store' },
+  { name: 'Service', icon: 'Briefcase' },
+  { name: 'Appointment', icon: 'CalendarCheck' },
+  { name: 'Customer', icon: 'Contact2' },
   { name: 'Wallet', icon: 'Wallet' },
+  { name: 'Transaction', icon: 'Receipt' },
+  { name: 'Whatsapp Chatbot', icon: 'Bot' },
 ];
 
 function delay(ms: number) {
