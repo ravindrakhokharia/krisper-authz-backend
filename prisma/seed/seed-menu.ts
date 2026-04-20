@@ -44,6 +44,7 @@ const menus = [
   { name: 'Wallet', icon: 'Wallet' },
   { name: 'Transaction', icon: 'Receipt' },
   { name: 'Whatsapp Chatbot', icon: 'Bot' },
+  { name: 'Offers', icon: 'Gift' },
 ];
 
 function delay(ms: number) {
