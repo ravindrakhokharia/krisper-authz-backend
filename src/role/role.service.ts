@@ -199,14 +199,35 @@ export class RoleService {
       return updatedRole;
     });
 
-    await Promise.all([
-      ...usersToRemove.map((userId) =>
-        this.removeRoleFromOAuthUser(userId, updateRoleDto.name || role.name),
+    const oldName = existingRole.name;
+    const newName = updateRoleDto.name || role.name;
+    const isRenamed = updateRoleDto.name && updateRoleDto.name !== oldName;
+
+    // Users being removed: remove the OLD role name from their OAuth roles[]
+    await Promise.all(
+      usersToRemove.map((userId) =>
+        this.removeRoleFromOAuthUser(userId, oldName),
       ),
-      ...usersToAdd.map((userId) =>
-        this.addRoleToOAuthUser(userId, updateRoleDto.name || role.name),
+    );
+
+    // Users being added: add the NEW role name to their OAuth roles[]
+    await Promise.all(
+      usersToAdd.map((userId) =>
+        this.addRoleToOAuthUser(userId, newName),
       ),
-    ]);
+    );
+
+    // If the role was renamed, directly replace old name with new name for all staying users
+    if (isRenamed) {
+      const stayingUserIds = existingUserIds.filter(
+        (uid) => !usersToRemove.includes(uid),
+      );
+      await Promise.all(
+        stayingUserIds.map((userId) =>
+          this.renameRoleForOAuthUser(userId, oldName, newName),
+        ),
+      );
+    }
 
     return {
       data: role,
@@ -270,6 +291,36 @@ export class RoleService {
 
       throw new BadRequestException({
         message: 'Failed to assign role to user',
+        error: error.response?.data?.message,
+      });
+    }
+  }
+
+  private async renameRoleForOAuthUser(userId: string, oldName: string, newName: string) {
+    try {
+      const oauthApiUrl = OAUTH_API_URL;
+
+      let { data: user } = await firstValueFrom(
+        this.httpService.get(`${oauthApiUrl}/users/${userId}`),
+      );
+
+      user = user.data;
+      const userRoles: string[] = user?.roles || [];
+
+      const updatedRoles = userRoles.map((role: string) =>
+        role === oldName ? newName : role,
+      );
+
+      await firstValueFrom(
+        this.httpService.put(`${oauthApiUrl}/users/${userId}`, {
+          roles: updatedRoles,
+        }),
+      );
+    } catch (error) {
+      console.log('Failed to rename role for user', error);
+
+      throw new BadRequestException({
+        message: 'Failed to rename role for user',
         error: error.response?.data?.message,
       });
     }
