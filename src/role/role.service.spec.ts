@@ -70,6 +70,42 @@ describe('RoleService', () => {
       expect(res).toEqual({ data: created, message: 'Role created successfully' });
     });
 
+    it('saves loginUserId in createdBy fields', async () => {
+      const dto: CreateRoleDto = {
+        name: 'admin',
+        description: 'Admin role',
+        userIds: ['u1'],
+        menuIds: ['m1'],
+      } as any;
+      const created = { id: 'r1', ...dto } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.role.create as jest.Mock).mockResolvedValue(created);
+      httpService.get.mockReturnValue(of({ data: { data: { id: 'u1' } } } as any));
+      httpService.put.mockReturnValue(of({ data: {} } as any));
+
+      await service.create(dto, 'user-123');
+
+      expect(prisma.role.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            createdBy: 'user-123',
+            roleMenus: {
+              createMany: {
+                data: [{ menuId: 'm1', createdBy: 'user-123' }],
+                skipDuplicates: true,
+              },
+            },
+            userRoles: {
+              createMany: {
+                data: [{ userId: 'u1', createdBy: 'user-123' }],
+                skipDuplicates: true,
+              },
+            },
+          }),
+        }),
+      );
+    });
+
     it('should return existing role if name already exists', async () => {
       const dto: CreateRoleDto = {
         name: 'admin',
@@ -191,6 +227,39 @@ describe('RoleService', () => {
       (prisma.role.findMany as jest.Mock).mockResolvedValue(undefined);
       const res = await service.findAll();
       expect(res).toEqual({ data: [], message: 'Roles fetched successfully' });
+    });
+
+    it('returns all roles for Super Admin user', async () => {
+      const items = [{ id: 'r1' }] as any[];
+      (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
+      const res = await service.findAll({ id: 'u1', roles: ['Super Admin'] });
+      expect(prisma.role.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
+      expect(res).toEqual({ data: items, message: 'Roles fetched successfully' });
+    });
+
+    it('returns only created or assigned roles for non-Super Admin user', async () => {
+      const items = [{ id: 'r1', createdBy: 'u1' }] as any[];
+      (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
+      const res = await service.findAll({ id: 'u1', roles: ['Regular User'] });
+      expect(prisma.role.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            OR: [
+              { createdBy: 'u1' },
+              {
+                userRoles: {
+                  some: {
+                    userId: 'u1',
+                  },
+                },
+              },
+            ],
+          },
+        }),
+      );
+      expect(res).toEqual({ data: items, message: 'Roles fetched successfully' });
     });
   });
 
@@ -433,6 +502,41 @@ describe('RoleService', () => {
         where: { id: 'id-2' },
       });
       expect(res).toEqual({ data: deleted, message: 'Role deleted successfully' });
+    });
+
+    it('throws BadRequestException if role name is Super Admin and user is not Super Admin', async () => {
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue({
+        id: 'super-admin-id',
+        name: 'Super Admin',
+        roleMenus: [],
+        userRoles: [],
+      });
+
+      await expect(
+        service.delete('super-admin-id', { roles: ['Regular User'] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('allows deleting Super Admin if the logged-in user is a Super Admin', async () => {
+      const deleted = { id: 'super-admin-id', name: 'Super Admin' } as any;
+      (prisma.role.delete as jest.Mock).mockResolvedValue(deleted);
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue({
+        id: 'super-admin-id',
+        name: 'Super Admin',
+        roleMenus: [],
+        userRoles: [],
+      });
+
+      const res = await service.delete('super-admin-id', {
+        roles: ['Super Admin'],
+      });
+      expect(prisma.role.delete).toHaveBeenCalledWith({
+        where: { id: 'super-admin-id' },
+      });
+      expect(res).toEqual({
+        data: deleted,
+        message: 'Role deleted successfully',
+      });
     });
 
     it('throws BadRequestException if role to delete is not found', async () => {

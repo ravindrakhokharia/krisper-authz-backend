@@ -13,7 +13,7 @@ export class RoleService {
     private readonly httpService: HttpService,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto) {
+  async create(createRoleDto: CreateRoleDto, loginUserId?: string) {
     const userIds = [...new Set(createRoleDto.userIds || [])];
     const menuIds = [...new Set(createRoleDto.menuIds || [])];
 
@@ -48,15 +48,16 @@ export class RoleService {
           name: createRoleDto.name,
           description: createRoleDto.description,
           isActive: createRoleDto.isActive,
+          createdBy: loginUserId,
           roleMenus: {
             createMany: {
-              data: menuIds.map((menuId) => ({ menuId })),
+              data: menuIds.map((menuId) => ({ menuId, createdBy: loginUserId })),
               skipDuplicates: true,
             },
           },
           userRoles: {
             createMany: {
-              data: userIds.map((userId) => ({ userId })),
+              data: userIds.map((userId) => ({ userId, createdBy: loginUserId })),
               skipDuplicates: true,
             },
           },
@@ -76,8 +77,26 @@ export class RoleService {
     };
   }
 
-  async findAll() {
+  async findAll(loginUser?: any) {
+    const isSuperAdmin = loginUser?.roles?.includes('Super Admin');
+    const whereClause =
+      isSuperAdmin || !loginUser
+        ? {}
+        : {
+            OR: [
+              { createdBy: loginUser?.id },
+              {
+                userRoles: {
+                  some: {
+                    userId: loginUser?.id,
+                  },
+                },
+              },
+            ],
+          };
+
     const roles = await this.prisma.role.findMany({
+      where: whereClause,
       include: {
         roleMenus: {
           include: {
@@ -326,7 +345,7 @@ export class RoleService {
     }
   }
 
-  async delete(id: string) {
+  async delete(id: string, loginUser?: any) {
     const role = await this.prisma.role.findUnique({
       where: { id },
       include: {
@@ -337,6 +356,16 @@ export class RoleService {
 
     if (!role) {
       throw new BadRequestException('Role not found');
+    }
+
+    if (role.name === 'Super Admin') {
+      const isSuperAdmin = loginUser?.roles?.includes('Super Admin');
+      console.log('isSuperAdmin', isSuperAdmin);
+      if (!isSuperAdmin) {
+        throw new BadRequestException(
+          'Only Super Admin can delete the Super Admin role',
+        );
+      }
     }
 
     if (role?.roleMenus?.length > 0) {

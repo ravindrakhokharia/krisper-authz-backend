@@ -42,8 +42,9 @@ describe('RoleController', () => {
       const created = { id: 'r1', ...dto } as any;
       service.create.mockResolvedValue(created);
 
-      const res = await controller.create(dto);
-      expect(service.create).toHaveBeenCalledWith(dto);
+      const req = { user: { id: 'u1' } };
+      const res = await controller.create(dto, req);
+      expect(service.create).toHaveBeenCalledWith(dto, 'u1');
       expect(res).toBe(created);
     });
   });
@@ -52,8 +53,9 @@ describe('RoleController', () => {
     it('delegates and returns list', async () => {
       const list = [{ id: 'r1' }] as any[];
       service.findAll.mockResolvedValue(list);
-      const res = await controller.findAll();
-      expect(service.findAll).toHaveBeenCalled();
+      const req = { user: { id: 'u1', roles: ['Regular User'] } };
+      const res = await controller.findAll(req as any);
+      expect(service.findAll).toHaveBeenCalledWith(req.user);
       expect(res).toBe(list);
     });
   });
@@ -80,11 +82,12 @@ describe('RoleController', () => {
   });
 
   describe('delete', () => {
-    it('delegates with id', async () => {
+    it('delegates with id and request user', async () => {
       const deleted = { id: 'r1', name: 'deleted' } as any;
       service.delete.mockResolvedValue(deleted);
-      const res = await controller.delete('r1');
-      expect(service.delete).toHaveBeenCalledWith('r1');
+      const req = { user: { id: 'u1', roles: ['Super Admin'] } };
+      const res = await controller.delete('r1', req as any);
+      expect(service.delete).toHaveBeenCalledWith('r1', req.user);
       expect(res).toBe(deleted);
     });
   });

@@ -66,7 +66,7 @@ describe('UserRoleService', () => {
       (prisma.userRole.create as jest.Mock).mockResolvedValue(created);
 
       // Mock HTTP chain
-      const userResp = { data: { id: 'u1', roles: [] } } as any;
+      const userResp = { data: { data: { id: 'u1', roles: [] } } } as any;
       const updatedResp = { data: { ok: true } } as any;
 
       const { of } = require('rxjs');
@@ -93,7 +93,7 @@ describe('UserRoleService', () => {
       (prisma.userRole.create as jest.Mock).mockResolvedValue(created);
 
       // userResp without roles field
-      const userResp = { data: { id: 'u1' } } as any;
+      const userResp = { data: { data: { id: 'u1' } } } as any;
       const updatedResp = { data: { ok: true } } as any;
 
       const { of } = require('rxjs');

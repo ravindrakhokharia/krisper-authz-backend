@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -21,14 +22,15 @@ export class RoleController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createRoleDto: CreateRoleDto) {
-    return this.roleService.create(createRoleDto);
+  create(@Body() createRoleDto: CreateRoleDto, @Req() req: any) {
+    const userId = req.user?.id;
+    return this.roleService.create(createRoleDto, userId);
   }
 
   @Get()
-  // @UseGuards(JwtAuthGuard)
-  findAll() {
-    return this.roleService.findAll();
+  @UseGuards(JwtAuthGuard)
+  findAll(@Req() req: any) {
+    return this.roleService.findAll(req.user);
   }
 
   @Get(':id')
@@ -51,7 +53,8 @@ export class RoleController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  delete(@Param('id') id: string) {
-    return this.roleService.delete(id);
+  delete(@Param('id') id: string, @Req() req: any) {
+    const loginUser = req.user;
+    return this.roleService.delete(id, loginUser);
   }
 }
