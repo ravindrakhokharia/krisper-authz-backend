@@ -53,4 +53,10 @@ export class UserRoleController {
   remove(@Param('id') id: string) {
     return this.userRoleService.remove(id);
   }
+
+  @Delete('user/:userId')
+  @UseGuards(JwtAuthGuard)
+  removeByUser(@Param('userId') userId: string) {
+    return this.userRoleService.removeByUser(userId);
+  }
 }

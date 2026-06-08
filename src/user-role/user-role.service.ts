@@ -99,4 +99,10 @@ export class UserRoleService {
   remove(id: string) {
     return `This action removes a #${id} rolePermission`;
   }
+
+  async removeByUser(userId: string) {
+     await this.prisma.userRole.deleteMany({ where: { userId } });
+
+     return { message: 'User role deleted successfully' };
+  }
 }
