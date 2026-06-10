@@ -62,4 +62,31 @@ export class MenuService {
     });
     return { data: menu, message: 'Menu deleted successfully' };
   }
+
+  async findUserModule(id: string) {
+    const userRole = await this.prisma.userRole.findMany({
+      where: {
+        userId: id,
+      },
+    });
+
+    const roleIds = userRole.map((ur) => ur.roleId);
+
+    const roleMenu = await this.prisma.roleMenu.findMany({
+      where: {
+        roleId: { in: roleIds },
+      },
+      include: {
+        menu: true,
+      },
+    });
+
+    const totalModules = roleMenu.length;
+
+    return {
+      data: roleMenu,
+      total: totalModules,
+      message: 'User modules fetched successfully',
+    };
+  }
 }

@@ -48,4 +48,10 @@ export class MenuController {
   remove(@Param('id') id: string) {
     return this.menuService.remove(id);
   }
+
+  @Get('user-module/:id')
+  @UseGuards(JwtAuthGuard)
+  findUserModule(@Param('id') id: string) {
+    return this.menuService.findUserModule(id);
+  }
 }
