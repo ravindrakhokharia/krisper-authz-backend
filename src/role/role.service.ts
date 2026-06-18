@@ -1,10 +1,10 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { firstValueFrom } from 'rxjs';
+import { OAUTH_API_URL } from 'src/shared/constants/constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { OAUTH_API_URL } from 'src/shared/constants/constant';
-import { firstValueFrom } from 'rxjs';
-import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class RoleService {
@@ -51,13 +51,19 @@ export class RoleService {
           createdBy: loginUserId,
           roleMenus: {
             createMany: {
-              data: menuIds.map((menuId) => ({ menuId, createdBy: loginUserId })),
+              data: menuIds.map((menuId) => ({
+                menuId,
+                createdBy: loginUserId,
+              })),
               skipDuplicates: true,
             },
           },
           userRoles: {
             createMany: {
-              data: userIds.map((userId) => ({ userId, createdBy: loginUserId })),
+              data: userIds.map((userId) => ({
+                userId,
+                createdBy: loginUserId,
+              })),
               skipDuplicates: true,
             },
           },
@@ -106,7 +112,13 @@ export class RoleService {
         userRoles: true,
       },
     });
-    return { data: roles || [], message: 'Roles fetched successfully' };
+
+    const rolesWithAssigned = (roles || []).map((role) => ({
+      ...role,
+      isAssigned: role.userRoles.some((ur) => ur.userId === loginUser?.id),
+    }));
+
+    return { data: rolesWithAssigned, message: 'Roles fetched successfully' };
   }
 
   async findOne(id: string) {
@@ -149,6 +161,14 @@ export class RoleService {
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
     const { menuIds = [], userIds = [], ...roleData } = updateRoleDto;
+
+    const existingRoleWithSameName = await this.prisma.role.findUnique({
+      where: { name: updateRoleDto.name },
+    });
+
+    if (existingRoleWithSameName && existingRoleWithSameName.id !== id) {
+      throw new BadRequestException('Role name already exists');
+    }
 
     const existingRole = await this.prisma.role.findUnique({
       where: { id },
@@ -231,9 +251,7 @@ export class RoleService {
 
     // Users being added: add the NEW role name to their OAuth roles[]
     await Promise.all(
-      usersToAdd.map((userId) =>
-        this.addRoleToOAuthUser(userId, newName),
-      ),
+      usersToAdd.map((userId) => this.addRoleToOAuthUser(userId, newName)),
     );
 
     // If the role was renamed, directly replace old name with new name for all staying users
@@ -315,7 +333,11 @@ export class RoleService {
     }
   }
 
-  private async renameRoleForOAuthUser(userId: string, oldName: string, newName: string) {
+  private async renameRoleForOAuthUser(
+    userId: string,
+    oldName: string,
+    newName: string,
+  ) {
     try {
       const oauthApiUrl = OAUTH_API_URL;
 
