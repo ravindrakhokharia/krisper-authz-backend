@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserRoleService } from './user-role.service';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
@@ -23,8 +24,8 @@ export class UserRoleController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createUserRoleDto: CreateUserRoleDto) {
-    return this.userRoleService.create(createUserRoleDto);
+  create(@Body() createUserRoleDto: CreateUserRoleDto, @Req() req: any) {
+    return this.userRoleService.create(createUserRoleDto, req.user);
   }
 
   @Get()

@@ -1,10 +1,14 @@
 import { HttpService } from '@nestjs/axios';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { OAUTH_API_URL } from 'src/shared/constants/constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { OAUTH_API_URL } from 'src/shared/constants/constant';
 
 @Injectable()
 export class RoleService {
@@ -13,9 +17,10 @@ export class RoleService {
     private readonly httpService: HttpService,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto, loginUserId?: string) {
+  async create(createRoleDto: CreateRoleDto, loginUser?: any) {
     const userIds = [...new Set(createRoleDto.userIds || [])];
     const menuIds = [...new Set(createRoleDto.menuIds || [])];
+    const loginUserId = loginUser?.id;
 
     const existingRole = await this.prisma.role.findUnique({
       where: { name: createRoleDto.name },
@@ -28,10 +33,11 @@ export class RoleService {
       };
     }
 
+    const oauthApiUrl = OAUTH_API_URL || process.env.OAUTH_API_URL;
     const users = await Promise.all(
       userIds.map(async (userId) => {
         const { data } = await firstValueFrom(
-          this.httpService.get(`${OAUTH_API_URL}/users/${userId}`),
+          this.httpService.get(`${oauthApiUrl}/users/${userId}`),
         );
 
         if (!data) {
@@ -41,6 +47,34 @@ export class RoleService {
         return data;
       }),
     );
+
+    // Enforce role assignment rules
+    if (createRoleDto.name === 'Super Admin') {
+      const isLoginUserSuperAdmin = loginUser?.roles?.includes('Super Admin');
+      if (!isLoginUserSuperAdmin) {
+        throw new ForbiddenException(
+          'Only Super Admins can assign the Super Admin role.',
+        );
+      }
+
+      for (const u of users) {
+        const roles: string[] = u.data?.roles || [];
+        if (roles.length > 0 && !roles.includes('Super Admin')) {
+          throw new BadRequestException(
+            'Cannot assign Super Admin to a user with other roles.',
+          );
+        }
+      }
+    } else {
+      for (const u of users) {
+        const roles: string[] = u.data?.roles || [];
+        if (roles.includes('Super Admin')) {
+          throw new BadRequestException(
+            `Cannot assign role ${createRoleDto.name} to a Super Admin user.`,
+          );
+        }
+      }
+    }
 
     const role = await this.prisma.$transaction(async (tx) => {
       return await tx.role.create({
@@ -159,17 +193,7 @@ export class RoleService {
     return { data: role, message: 'Role fetched successfully' };
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto) {
-    const { menuIds = [], userIds = [], ...roleData } = updateRoleDto;
-
-    const existingRoleWithSameName = await this.prisma.role.findUnique({
-      where: { name: updateRoleDto.name },
-    });
-
-    if (existingRoleWithSameName && existingRoleWithSameName.id !== id) {
-      throw new BadRequestException('Role name already exists');
-    }
-
+  async update(id: string, updateRoleDto: UpdateRoleDto, loginUser?: any) {
     const existingRole = await this.prisma.role.findUnique({
       where: { id },
       include: {
@@ -182,8 +206,22 @@ export class RoleService {
       throw new BadRequestException('Role not found');
     }
 
+    const { name } = updateRoleDto;
+    if (name) {
+      const existingRoleWithSameName = await this.prisma.role.findUnique({
+        where: { name },
+      });
+
+      if (existingRoleWithSameName && existingRoleWithSameName.id !== id) {
+        throw new BadRequestException('Role name already exists');
+      }
+    }
+
     const existingMenuIds = existingRole.roleMenus.map((m) => m.menuId);
     const existingUserIds = existingRole.userRoles.map((u) => u.userId);
+
+    const menuIds = updateRoleDto.menuIds ?? existingMenuIds;
+    const userIds = updateRoleDto.userIds ?? existingUserIds;
 
     const menuSet = new Set(menuIds);
     const existingMenuSet = new Set(existingMenuIds);
@@ -191,11 +229,73 @@ export class RoleService {
     const userSet = new Set(userIds);
     const existingUserSet = new Set(existingUserIds);
 
-    const menusToAdd = menuIds?.filter((id) => !existingMenuSet.has(id));
-    const menusToRemove = existingMenuIds?.filter((id) => !menuSet.has(id));
+    const menusToAdd = menuIds?.filter((id) => !existingMenuSet.has(id)) || [];
+    const menusToRemove =
+      existingMenuIds?.filter((id) => !menuSet.has(id)) || [];
 
-    const usersToAdd = userIds?.filter((id) => !existingUserSet.has(id));
-    const usersToRemove = existingUserIds?.filter((id) => !userSet.has(id));
+    const usersToAdd = userIds?.filter((id) => !existingUserSet.has(id)) || [];
+    const usersToRemove =
+      existingUserIds?.filter((id) => !userSet.has(id)) || [];
+
+    const oldName = existingRole.name;
+    const newName = updateRoleDto.name || existingRole.name;
+    const isRenamed = newName !== oldName;
+    const isSuperAdminRole = newName.toLowerCase() === 'super admin';
+    const isOwnerRole = newName.toLowerCase() === 'owner';
+
+    // Validate role compatibility for added users (or all users if the role itself is renamed)
+    const usersToValidate = isRenamed ? userIds : usersToAdd;
+    const oauthApiUrl = OAUTH_API_URL || process.env.OAUTH_API_URL;
+
+    const usersDetails = await Promise.all(
+      usersToValidate.map(async (userId) => {
+        const { data } = await firstValueFrom(
+          this.httpService.get(`${oauthApiUrl}/users/${userId}`),
+        );
+        if (!data) {
+          throw new BadRequestException(`Invalid user ID: ${userId}`);
+        }
+        return {
+          userId,
+          rolesLower: (data?.data?.roles || []).map((r: string) =>
+            r.toLowerCase(),
+          ),
+        };
+      }),
+    );
+
+    // Enforce role compatibility rules
+    if (isSuperAdminRole) {
+      const isLoginUserSuperAdmin = loginUser?.roles?.some(
+        (r: string) => r.toLowerCase() === 'super admin',
+      );
+      if (!isLoginUserSuperAdmin) {
+        throw new ForbiddenException(
+          'Only Super Admins can assign the Super Admin role.',
+        );
+      }
+
+      for (const u of usersDetails) {
+        const hasIncompatibleRole = u.rolesLower.some(
+          (r) => r !== 'owner' && r !== 'super admin',
+        );
+        if (hasIncompatibleRole) {
+          throw new BadRequestException(
+            'Cannot assign Super Admin to a user with other roles.',
+          );
+        }
+      }
+    } else if (!isOwnerRole) {
+      for (const u of usersDetails) {
+        if (u.rolesLower.includes('super admin')) {
+          throw new BadRequestException(
+            `Cannot assign ${newName} role to Super Admin user.`,
+          );
+        }
+      }
+    }
+
+    const { menuIds: _, userIds: __, ...roleData } = updateRoleDto;
 
     const role = await this.prisma.$transaction(async (tx) => {
       const updatedRole = await tx.role.update({
@@ -238,33 +338,23 @@ export class RoleService {
       return updatedRole;
     });
 
-    const oldName = existingRole.name;
-    const newName = updateRoleDto.name || role.name;
-    const isRenamed = updateRoleDto.name && updateRoleDto.name !== oldName;
-
-    // Users being removed: remove the OLD role name from their OAuth roles[]
     await Promise.all(
-      usersToRemove.map((userId) =>
-        this.removeRoleFromOAuthUser(userId, oldName),
-      ),
+      usersToRemove.map(async (userId) => {
+        await this.removeRoleFromOAuthUser(userId, oldName);
+        if (isRenamed) {
+          await this.removeRoleFromOAuthUser(userId, newName);
+        }
+      }),
     );
 
-    // Users being added: add the NEW role name to their OAuth roles[]
     await Promise.all(
-      usersToAdd.map((userId) => this.addRoleToOAuthUser(userId, newName)),
+      userIds.map(async (userId) => {
+        if (isRenamed) {
+          await this.removeRoleFromOAuthUser(userId, oldName);
+        }
+        await this.addRoleToOAuthUser(userId, newName);
+      }),
     );
-
-    // If the role was renamed, directly replace old name with new name for all staying users
-    if (isRenamed) {
-      const stayingUserIds = existingUserIds.filter(
-        (uid) => !usersToRemove.includes(uid),
-      );
-      await Promise.all(
-        stayingUserIds.map((userId) =>
-          this.renameRoleForOAuthUser(userId, oldName, newName),
-        ),
-      );
-    }
 
     return {
       data: role,
@@ -274,7 +364,7 @@ export class RoleService {
 
   private async removeRoleFromOAuthUser(userId: string, roleName: string) {
     try {
-      const oauthApiUrl = OAUTH_API_URL;
+      const oauthApiUrl = OAUTH_API_URL || process.env.OAUTH_API_URL;
 
       let { data: user } = await firstValueFrom(
         this.httpService.get(`${oauthApiUrl}/users/${userId}`),
@@ -304,7 +394,7 @@ export class RoleService {
 
   private async addRoleToOAuthUser(userId: string, roleName: string) {
     try {
-      const oauthApiUrl = OAUTH_API_URL;
+      const oauthApiUrl = OAUTH_API_URL || process.env.OAUTH_API_URL;
 
       let { data: user } = await firstValueFrom(
         this.httpService.get(`${oauthApiUrl}/users/${userId}`),
@@ -339,7 +429,7 @@ export class RoleService {
     newName: string,
   ) {
     try {
-      const oauthApiUrl = OAUTH_API_URL;
+      const oauthApiUrl = OAUTH_API_URL || process.env.OAUTH_API_URL;
 
       let { data: user } = await firstValueFrom(
         this.httpService.get(`${oauthApiUrl}/users/${userId}`),

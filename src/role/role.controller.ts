@@ -23,8 +23,7 @@ export class RoleController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createRoleDto: CreateRoleDto, @Req() req: any) {
-    const userId = req.user?.id;
-    return this.roleService.create(createRoleDto, userId);
+    return this.roleService.create(createRoleDto, req.user);
   }
 
   @Get()
@@ -47,8 +46,12 @@ export class RoleController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.roleService.update(id, updateRoleDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+    @Req() req: any,
+  ) {
+    return this.roleService.update(id, updateRoleDto, req.user);
   }
 
   @Delete(':id')
