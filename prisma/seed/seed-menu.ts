@@ -48,7 +48,7 @@ const menus = [
   { name: 'Business Dashboard', icon: 'MdDashboard' },
   { name: 'Business Pos', icon: 'MonitorSmartphone' },
   { name: 'Expense', icon: 'CreditCard' },
-  { name: 'Partners', icon: 'Handshake' },
+  { name: 'Staff & Partners', icon: 'user-cog' },
 ];
 
 function delay(ms: number) {

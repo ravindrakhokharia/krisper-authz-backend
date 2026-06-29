@@ -3,6 +3,7 @@ import { seedActions } from './seed-actions';
 import { seedMenus } from './seed-menu';
 import { seedOwnerRole } from './seed-owner-role';
 import { seedSuperAdminRole } from './seed-super-admin-role';
+import { seedStaffRole } from './seed-staff-role';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,7 @@ async function main() {
   await seedMenus(prisma);
   await seedSuperAdminRole(prisma);
   await seedOwnerRole(prisma);
+  await seedStaffRole(prisma);
 
   console.log('\n✅ All seeds completed successfully!');
 }
