@@ -36,8 +36,9 @@ describe('UserRoleController', () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       const created = { id: 'ur1', ...dto } as any;
       service.create.mockResolvedValue(created);
-      const res = await controller.create(dto);
-      expect(service.create).toHaveBeenCalledWith(dto);
+      const req = { user: { id: 'u1' } };
+      const res = await controller.create(dto, req as any);
+      expect(service.create).toHaveBeenCalledWith(dto, req.user);
       expect(res).toBe(created);
     });
   });

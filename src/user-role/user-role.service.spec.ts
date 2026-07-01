@@ -16,11 +16,15 @@ describe('UserRoleService', () => {
 
   beforeEach(async () => {
     const prismaMock: Partial<jest.Mocked<PrismaService>> = {
+      role: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'r1', name: 'admin' }),
+      } as any,
       userRole: {
         create: jest.fn(),
         findMany: jest.fn(),
         findUnique: jest.fn(),
         count: jest.fn(),
+        delete: jest.fn(),
       } as any,
     };
 
@@ -112,14 +116,16 @@ describe('UserRoleService', () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue({
         id: 'ur',
+        role: { name: 'admin' },
       } as any);
       const axiosErr = new AxiosError('bad', 'ERR', undefined, undefined, {
         status: 400,
         data: { msg: 'oops' },
       } as any);
 
-      const { throwError } = require('rxjs');
-      http.get.mockReturnValue(throwError(() => axiosErr));
+      const { of, throwError } = require('rxjs');
+      http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
+      http.put.mockReturnValue(throwError(() => axiosErr));
 
       try {
         await service.create(dto);
@@ -138,11 +144,13 @@ describe('UserRoleService', () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue({
         id: 'ur',
+        role: { name: 'admin' },
       } as any);
       const genericErr = new Error('Generic failure');
 
-      const { throwError } = require('rxjs');
-      http.get.mockReturnValue(throwError(() => genericErr));
+      const { of, throwError } = require('rxjs');
+      http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
+      http.put.mockReturnValue(throwError(() => genericErr));
 
       await expect(service.create(dto)).rejects.toThrow('Generic failure');
     });
@@ -151,6 +159,7 @@ describe('UserRoleService', () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue({
         id: 'ur',
+        role: { name: 'admin' },
       } as any);
       const axiosErr = new AxiosError(
         'no response',
@@ -160,8 +169,9 @@ describe('UserRoleService', () => {
         undefined,
       );
 
-      const { throwError } = require('rxjs');
-      http.get.mockReturnValue(throwError(() => axiosErr));
+      const { of, throwError } = require('rxjs');
+      http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
+      http.put.mockReturnValue(throwError(() => axiosErr));
 
       try {
         await service.create(dto);
@@ -175,14 +185,16 @@ describe('UserRoleService', () => {
       const dto: CreateUserRoleDto = { userId: 'u1', roleId: 'r1' } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue({
         id: 'ur',
+        role: { name: 'admin' },
       } as any);
       const axiosErr = new AxiosError('no data', 'ERR', undefined, undefined, {
         status: 400,
         // response.data is missing
       } as any);
 
-      const { throwError } = require('rxjs');
-      http.get.mockReturnValue(throwError(() => axiosErr));
+      const { of, throwError } = require('rxjs');
+      http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
+      http.put.mockReturnValue(throwError(() => axiosErr));
 
       try {
         await service.create(dto);

@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
@@ -27,7 +29,13 @@ export class MenuController {
 
   @Get()
   // @UseGuards(JwtAuthGuard)
-  findAll() {
+  findAll(
+    @Query('hierarchical', new ParseBoolPipe({ optional: true }))
+    hierarchical?: boolean,
+  ) {
+    if (hierarchical) {
+      return this.menuService.findHierarchical();
+    }
     return this.menuService.findAll();
   }
 

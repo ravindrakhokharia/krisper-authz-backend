@@ -7,10 +7,13 @@ export async function seedOwnerRole(prisma: PrismaClient) {
     // 1. Create "Owner" role
     const role = await prisma.role.upsert({
       where: { name: 'Owner' },
-      update: {},
+      update: {
+        createdBy: 'SYSTEM',
+      },
       create: {
         name: 'Owner',
         description: 'Owner role with shop management access',
+        createdBy: 'SYSTEM',
       },
     });
 

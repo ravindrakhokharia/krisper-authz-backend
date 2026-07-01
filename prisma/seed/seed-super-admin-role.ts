@@ -25,10 +25,13 @@ export async function seedSuperAdminRole(prisma: PrismaClient) {
     // 2. Create "Super Admin" role
     const role = await prisma.role.upsert({
       where: { name: 'Super Admin' },
-      update: {},
+      update: {
+        createdBy: 'SYSTEM',
+      },
       create: {
         name: 'Super Admin',
         description: 'Full access to all system resources',
+        createdBy: 'SYSTEM',
       },
     });
 

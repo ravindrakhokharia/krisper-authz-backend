@@ -20,7 +20,7 @@ export class RoleService {
   async create(createRoleDto: CreateRoleDto, loginUser?: any) {
     const userIds = [...new Set(createRoleDto.userIds || [])];
     const menuIds = [...new Set(createRoleDto.menuIds || [])];
-    const loginUserId = loginUser?.id;
+    const loginUserId = typeof loginUser === 'string' ? loginUser : loginUser?.id;
 
     const existingRole = await this.prisma.role.findUnique({
       where: { name: createRoleDto.name },
@@ -112,7 +112,11 @@ export class RoleService {
     );
 
     return {
-      data: role,
+      data: {
+        ...role,
+        isDeletable: role.createdBy !== 'SYSTEM',
+        isEditable: role.createdBy !== 'SYSTEM',
+      },
       message: 'Role created successfully',
     };
   }
@@ -149,7 +153,9 @@ export class RoleService {
 
     const rolesWithAssigned = (roles || []).map((role) => ({
       ...role,
-      isAssigned: role.userRoles.some((ur) => ur.userId === loginUser?.id),
+      isDeletable: role.createdBy !== 'SYSTEM',
+      isEditable: role.createdBy !== 'SYSTEM',
+      isAssigned: role.userRoles?.some((ur) => ur.userId === loginUser?.id) || false,
     }));
 
     return { data: rolesWithAssigned, message: 'Roles fetched successfully' };
@@ -171,7 +177,14 @@ export class RoleService {
     if (!role) {
       throw new BadRequestException('Role not found');
     }
-    return { data: role, message: 'Role fetched successfully' };
+
+    const roleWithDeletable = {
+      ...role,
+      isDeletable: role.createdBy !== 'SYSTEM',
+      isEditable: role.createdBy !== 'SYSTEM',
+    };
+
+    return { data: roleWithDeletable, message: 'Role fetched successfully' };
   }
 
   async findOneByName(name: string) {
@@ -190,7 +203,14 @@ export class RoleService {
     if (!role) {
       throw new BadRequestException('Role not found');
     }
-    return { data: role, message: 'Role fetched successfully' };
+
+    const roleWithDeletable = {
+      ...role,
+      isDeletable: role.createdBy !== 'SYSTEM',
+      isEditable: role.createdBy !== 'SYSTEM',
+    };
+
+    return { data: roleWithDeletable, message: 'Role fetched successfully' };
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto, loginUser?: any) {
@@ -204,6 +224,12 @@ export class RoleService {
 
     if (!existingRole) {
       throw new BadRequestException('Role not found');
+    }
+
+    if (existingRole.createdBy === 'SYSTEM') {
+      if (updateRoleDto.name && updateRoleDto.name !== existingRole.name) {
+        throw new BadRequestException('Role name cannot be modified for System roles');
+      }
     }
 
     const { name } = updateRoleDto;
@@ -237,8 +263,8 @@ export class RoleService {
     const usersToRemove =
       existingUserIds?.filter((id) => !userSet.has(id)) || [];
 
-    const oldName = existingRole.name;
-    const newName = updateRoleDto.name || existingRole.name;
+    const oldName = existingRole.name || '';
+    const newName = updateRoleDto.name || oldName;
     const isRenamed = newName !== oldName;
     const isSuperAdminRole = newName.toLowerCase() === 'super admin';
     const isOwnerRole = newName.toLowerCase() === 'owner';
@@ -357,7 +383,11 @@ export class RoleService {
     );
 
     return {
-      data: role,
+      data: {
+        ...role,
+        isDeletable: role.createdBy !== 'SYSTEM',
+        isEditable: role.createdBy !== 'SYSTEM',
+      },
       message: 'Role updated successfully',
     };
   }
@@ -470,14 +500,8 @@ export class RoleService {
       throw new BadRequestException('Role not found');
     }
 
-    if (role.name === 'Super Admin') {
-      const isSuperAdmin = loginUser?.roles?.includes('Super Admin');
-      console.log('isSuperAdmin', isSuperAdmin);
-      if (!isSuperAdmin) {
-        throw new BadRequestException(
-          'Only Super Admin can delete the Super Admin role',
-        );
-      }
+    if (role.createdBy === 'SYSTEM') {
+      throw new BadRequestException('Role is not deletable');
     }
 
     if (role?.roleMenus?.length > 0) {
@@ -493,7 +517,11 @@ export class RoleService {
     });
 
     return {
-      data: deletedRole,
+      data: {
+        ...deletedRole,
+        isDeletable: deletedRole.createdBy !== 'SYSTEM',
+        isEditable: deletedRole.createdBy !== 'SYSTEM',
+      },
       message: 'Role deleted successfully',
     };
   }

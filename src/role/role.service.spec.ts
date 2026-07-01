@@ -67,7 +67,10 @@ describe('RoleService', () => {
 
       const res = await service.create(dto);
       expect(prisma.role.findUnique).toHaveBeenCalled();
-      expect(res).toEqual({ data: created, message: 'Role created successfully' });
+      expect(res).toEqual({
+        data: { ...created, isDeletable: true, isEditable: true },
+        message: 'Role created successfully',
+      });
     });
 
     it('saves loginUserId in createdBy fields', async () => {
@@ -80,7 +83,9 @@ describe('RoleService', () => {
       const created = { id: 'r1', ...dto } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.role.create as jest.Mock).mockResolvedValue(created);
-      httpService.get.mockReturnValue(of({ data: { data: { id: 'u1' } } } as any));
+      httpService.get.mockReturnValue(
+        of({ data: { data: { id: 'u1' } } } as any),
+      );
       httpService.put.mockReturnValue(of({ data: {} } as any));
 
       await service.create(dto, 'user-123');
@@ -172,7 +177,7 @@ describe('RoleService', () => {
         }),
       );
       expect(httpService.put).toHaveBeenCalledTimes(2);
-      expect(res.data).toEqual(created);
+      expect(res.data).toEqual({ ...created, isDeletable: true, isEditable: true });
     });
 
     it('should throw BadRequestException if user data is missing from OAuth', async () => {
@@ -194,7 +199,10 @@ describe('RoleService', () => {
     it('should handle missing userIds and menuIds in dto', async () => {
       const dto: CreateRoleDto = { name: 'guest' } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
-      (prisma.role.create as jest.Mock).mockResolvedValue({ id: 'r3', name: 'guest' });
+      (prisma.role.create as jest.Mock).mockResolvedValue({
+        id: 'r3',
+        name: 'guest',
+      });
 
       await service.create(dto);
       expect(prisma.role.create).toHaveBeenCalledWith(
@@ -210,11 +218,22 @@ describe('RoleService', () => {
 
   describe('findAll', () => {
     it('returns all roles', async () => {
-      const items = [{ id: 'r1' }, { id: 'r2' }] as any[];
+      const items = [
+        { id: 'r1', name: 'admin', userRoles: [] },
+        { id: 'r2', name: 'user', userRoles: [] },
+      ] as any[];
       (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
       const res = await service.findAll();
       expect(prisma.role.findMany).toHaveBeenCalled();
-      expect(res).toEqual({ data: items, message: 'Roles fetched successfully' });
+      expect(res).toEqual({
+        data: items.map((item) => ({
+          ...item,
+          isDeletable: true,
+          isEditable: true,
+          isAssigned: false,
+        })),
+        message: 'Roles fetched successfully',
+      });
     });
 
     it('returns empty array if no roles found', async () => {
@@ -230,17 +249,27 @@ describe('RoleService', () => {
     });
 
     it('returns all roles for Super Admin user', async () => {
-      const items = [{ id: 'r1' }] as any[];
+      const items = [{ id: 'r1', name: 'admin', userRoles: [] }] as any[];
       (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
       const res = await service.findAll({ id: 'u1', roles: ['Super Admin'] });
       expect(prisma.role.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: {} }),
       );
-      expect(res).toEqual({ data: items, message: 'Roles fetched successfully' });
+      expect(res).toEqual({
+        data: items.map((item) => ({
+          ...item,
+          isDeletable: true,
+          isEditable: true,
+          isAssigned: false,
+        })),
+        message: 'Roles fetched successfully',
+      });
     });
 
     it('returns only created or assigned roles for non-Super Admin user', async () => {
-      const items = [{ id: 'r1', createdBy: 'u1' }] as any[];
+      const items = [
+        { id: 'r1', name: 'admin', createdBy: 'u1', userRoles: [] },
+      ] as any[];
       (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
       const res = await service.findAll({ id: 'u1', roles: ['Regular User'] });
       expect(prisma.role.findMany).toHaveBeenCalledWith(
@@ -259,18 +288,29 @@ describe('RoleService', () => {
           },
         }),
       );
-      expect(res).toEqual({ data: items, message: 'Roles fetched successfully' });
+      expect(res).toEqual({
+        data: items.map((item) => ({
+          ...item,
+          isDeletable: true,
+          isEditable: true,
+          isAssigned: false,
+        })),
+        message: 'Roles fetched successfully',
+      });
     });
   });
 
   describe('findOne', () => {
     it('returns role by id', async () => {
-      const item = { id: 'r-123' } as any;
+      const item = { id: 'r-123', name: 'admin' } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(item);
 
       const res = await service.findOne('r-123');
       expect(prisma.role.findUnique).toHaveBeenCalled();
-      expect(res).toEqual({ data: item, message: 'Role fetched successfully' });
+      expect(res).toEqual({
+        data: { ...item, isDeletable: true, isEditable: true },
+        message: 'Role fetched successfully',
+      });
     });
 
     it('throws BadRequestException if role not found', async () => {
@@ -290,7 +330,10 @@ describe('RoleService', () => {
       expect(prisma.role.findUnique).toHaveBeenCalledWith(
         expect.objectContaining({ where: { name: 'admin' } }),
       );
-      expect(res).toEqual({ data: item, message: 'Role fetched successfully' });
+      expect(res).toEqual({
+        data: { ...item, isDeletable: true, isEditable: true },
+        message: 'Role fetched successfully',
+      });
     });
 
     it('throws BadRequestException if role name not found', async () => {
@@ -309,12 +352,16 @@ describe('RoleService', () => {
 
       (prisma.role.findUnique as jest.Mock).mockResolvedValue({
         id: 'id-1',
+        name: 'admin',
         roleMenus: [],
         userRoles: [],
       });
       const res = await service.update('id-1', dto);
       expect(prisma.role.update).toHaveBeenCalled();
-      expect(res).toEqual({ data: updated, message: 'Role updated successfully' });
+      expect(res).toEqual({
+        data: { ...updated, isDeletable: true, isEditable: true },
+        message: 'Role updated successfully',
+      });
     });
 
     it('throws BadRequestException if role to update is not found', async () => {
@@ -322,6 +369,20 @@ describe('RoleService', () => {
       await expect(service.update('id-x', {})).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('throws BadRequestException if role name is modified for SYSTEM role', async () => {
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        createdBy: 'SYSTEM',
+        roleMenus: [],
+        userRoles: [],
+      } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+      await expect(
+        service.update('r1', { name: 'new-name' }),
+      ).rejects.toThrow(new BadRequestException('Role name cannot be modified for System roles'));
     });
 
     it('handles complex updates with user/menu additions and removals', async () => {
@@ -337,18 +398,24 @@ describe('RoleService', () => {
       };
 
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-      (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', ...dto });
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+        ...dto,
+      });
 
       // Mocking OAuth responses
-      httpService.get.mockReturnValue(
-        of({
-          data: { data: { id: 'u1', roles: ['admin'] } },
+      httpService.get.mockImplementation((url) => {
+        const id = url.split('/').pop();
+        const roles = id === 'u1' || id === 'u2' ? ['admin'] : [];
+        return of({
+          data: { data: { id, roles } },
           status: 200,
           statusText: 'OK',
           headers: {},
           config: {},
-        } as any),
-      );
+        } as any);
+      });
       httpService.put.mockReturnValue(
         of({
           data: {},
@@ -363,13 +430,17 @@ describe('RoleService', () => {
 
       // Verify Prisma deletions/creations
       expect(prisma.roleMenu.deleteMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { roleId: 'r1', menuId: { in: ['m1'] } } }),
+        expect.objectContaining({
+          where: { roleId: 'r1', menuId: { in: ['m1'] } },
+        }),
       );
       expect(prisma.roleMenu.createMany).toHaveBeenCalledWith(
         expect.objectContaining({ data: [{ roleId: 'r1', menuId: 'm3' }] }),
       );
       expect(prisma.userRole.deleteMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { roleId: 'r1', userId: { in: ['u1'] } } }),
+        expect.objectContaining({
+          where: { roleId: 'r1', userId: { in: ['u1'] } },
+        }),
       );
       expect(prisma.userRole.createMany).toHaveBeenCalledWith(
         expect.objectContaining({ data: [{ roleId: 'r1', userId: 'u3' }] }),
@@ -380,21 +451,37 @@ describe('RoleService', () => {
     });
 
     it('uses existing role name if name is not provided in update dto', async () => {
-        const existing = { id: 'r1', name: 'admin', roleMenus: [], userRoles: [] } as any;
-        const dto: UpdateRoleDto = { description: 'Updated' };
-        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-        (prisma.role.update as jest.Mock).mockResolvedValue({ ...existing, ...dto });
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [],
+      } as any;
+      const dto: UpdateRoleDto = { description: 'Updated' };
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        ...existing,
+        ...dto,
+      });
 
-        await service.update('r1', dto);
-        // No OAuth calls expected since users haven't changed, but code path should use existing.name
+      await service.update('r1', dto);
+      // No OAuth calls expected since users haven't changed, but code path should use existing.name
     });
   });
 
   describe('OAuth methods error handling', () => {
     it('throws BadRequestException on addRoleToOAuthUser failure', async () => {
-      const existing = { id: 'r1', roleMenus: [], userRoles: [] } as any;
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [],
+      } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-      (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+      });
 
       httpService.get.mockReturnValue(
         of({
@@ -415,9 +502,17 @@ describe('RoleService', () => {
     });
 
     it('throws BadRequestException on removeRoleFromOAuthUser failure', async () => {
-      const existing = { id: 'r1', roleMenus: [], userRoles: [{ userId: 'u1' }] } as any;
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [{ userId: 'u1' }],
+      } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-      (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+      });
 
       httpService.get.mockReturnValue(
         of({
@@ -438,9 +533,17 @@ describe('RoleService', () => {
     });
 
     it('skips adding role if it already exists on OAuth user', async () => {
-      const existing = { id: 'r1', roleMenus: [], userRoles: [] } as any;
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [],
+      } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-      (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+      });
 
       httpService.get.mockReturnValue(
         of({
@@ -459,40 +562,62 @@ describe('RoleService', () => {
     });
 
     it('handles missing roles field when adding role', async () => {
-        const existing = { id: 'r1', roleMenus: [], userRoles: [] } as any;
-        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-        (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [],
+      } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+      });
 
-        httpService.get.mockReturnValue(
-            of({ data: { data: { id: 'u1' } }, status: 200 } as any)
-        );
-        httpService.put.mockReturnValue(of({ data: {} } as any));
+      httpService.get.mockReturnValue(
+        of({ data: { data: { id: 'u1' } }, status: 200 } as any),
+      );
+      httpService.put.mockReturnValue(of({ data: {} } as any));
 
-        await service.update('r1', { userIds: ['u1'] });
-        expect(httpService.put).toHaveBeenCalledWith(expect.any(String), { roles: ['admin'] });
+      await service.update('r1', { userIds: ['u1'] });
+      expect(httpService.put).toHaveBeenCalledWith(expect.any(String), {
+        roles: ['admin'],
+      });
     });
 
     it('handles missing roles field when removing role', async () => {
-        const existing = { id: 'r1', roleMenus: [], userRoles: [{ userId: 'u1' }] } as any;
-        (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-        (prisma.role.update as jest.Mock).mockResolvedValue({ id: 'r1', name: 'admin' });
+      const existing = {
+        id: 'r1',
+        name: 'admin',
+        roleMenus: [],
+        userRoles: [{ userId: 'u1' }],
+      } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        id: 'r1',
+        name: 'admin',
+      });
 
-        httpService.get.mockReturnValue(
-            of({ data: { data: { id: 'u1' } }, status: 200 } as any)
-        );
-        httpService.put.mockReturnValue(of({ data: {} } as any));
+      httpService.get.mockReturnValue(
+        of({ data: { data: { id: 'u1' } }, status: 200 } as any),
+      );
+      httpService.put.mockReturnValue(of({ data: {} } as any));
 
-        await service.update('r1', { userIds: [] });
-        expect(httpService.put).toHaveBeenCalledWith(expect.any(String), { roles: [] });
+      await service.update('r1', { userIds: [] });
+      expect(httpService.put).toHaveBeenCalledWith(expect.any(String), {
+        roles: [],
+      });
     });
   });
 
   describe('delete', () => {
     it('removes a role', async () => {
-      const deleted = { id: 'id-2', name: 'user' } as any;
+      const deleted = { id: 'id-2', name: 'user', createdBy: 'user-1' } as any;
       (prisma.role.delete as jest.Mock).mockResolvedValue(deleted);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue({
         id: 'id-2',
+        name: 'user',
+        createdBy: 'user-1',
         roleMenus: [],
         userRoles: [],
       });
@@ -501,40 +626,47 @@ describe('RoleService', () => {
       expect(prisma.role.delete).toHaveBeenCalledWith({
         where: { id: 'id-2' },
       });
-      expect(res).toEqual({ data: deleted, message: 'Role deleted successfully' });
+      expect(res).toEqual({
+        data: { ...deleted, isDeletable: true, isEditable: true },
+        message: 'Role deleted successfully',
+      });
     });
 
-    it('throws BadRequestException if role name is Super Admin and user is not Super Admin', async () => {
+    it('throws BadRequestException if role createdBy is SYSTEM', async () => {
       (prisma.role.findUnique as jest.Mock).mockResolvedValue({
         id: 'super-admin-id',
         name: 'Super Admin',
+        createdBy: 'SYSTEM',
         roleMenus: [],
         userRoles: [],
       });
 
-      await expect(
-        service.delete('super-admin-id', { roles: ['Regular User'] }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.delete('super-admin-id')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
-    it('allows deleting Super Admin if the logged-in user is a Super Admin', async () => {
-      const deleted = { id: 'super-admin-id', name: 'Super Admin' } as any;
+    it('allows deleting custom roles (createdBy is not SYSTEM)', async () => {
+      const deleted = {
+        id: 'role-id',
+        name: 'Custom Role',
+        createdBy: 'user-1',
+      } as any;
       (prisma.role.delete as jest.Mock).mockResolvedValue(deleted);
       (prisma.role.findUnique as jest.Mock).mockResolvedValue({
-        id: 'super-admin-id',
-        name: 'Super Admin',
+        id: 'role-id',
+        name: 'Custom Role',
+        createdBy: 'user-1',
         roleMenus: [],
         userRoles: [],
       });
 
-      const res = await service.delete('super-admin-id', {
-        roles: ['Super Admin'],
-      });
+      const res = await service.delete('role-id');
       expect(prisma.role.delete).toHaveBeenCalledWith({
-        where: { id: 'super-admin-id' },
+        where: { id: 'role-id' },
       });
       expect(res).toEqual({
-        data: deleted,
+        data: { ...deleted, isDeletable: true, isEditable: true },
         message: 'Role deleted successfully',
       });
     });

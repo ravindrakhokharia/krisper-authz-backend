@@ -44,7 +44,7 @@ describe('RoleController', () => {
 
       const req = { user: { id: 'u1' } };
       const res = await controller.create(dto, req);
-      expect(service.create).toHaveBeenCalledWith(dto, 'u1');
+      expect(service.create).toHaveBeenCalledWith(dto, req.user);
       expect(res).toBe(created);
     });
   });
@@ -75,8 +75,9 @@ describe('RoleController', () => {
       const dto: UpdateRoleDto = { description: 'updated' } as any;
       const updated = { id: 'r1', ...dto } as any;
       service.update.mockResolvedValue(updated);
-      const res = await controller.update('r1', dto);
-      expect(service.update).toHaveBeenCalledWith('r1', dto);
+      const req = { user: { id: 'u1' } };
+      const res = await controller.update('r1', dto, req as any);
+      expect(service.update).toHaveBeenCalledWith('r1', dto, req.user);
       expect(res).toBe(updated);
     });
   });

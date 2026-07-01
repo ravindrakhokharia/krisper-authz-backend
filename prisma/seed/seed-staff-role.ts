@@ -7,10 +7,13 @@ export async function seedStaffRole(prisma: PrismaClient) {
     // 1. Create "Staff" role
     const role = await prisma.role.upsert({
       where: { name: 'Staff' },
-      update: {},
+      update: {
+        createdBy: 'SYSTEM',
+      },
       create: {
         name: 'Staff',
         description: 'Staff role with restricted shop access',
+        createdBy: 'SYSTEM',
       },
     });
 
