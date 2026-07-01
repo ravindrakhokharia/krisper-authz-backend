@@ -16,6 +16,7 @@ describe('UserRoleController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
+      removeByUser: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -80,6 +81,15 @@ describe('UserRoleController', () => {
       const res = controller.remove('ur1');
       expect(service.remove).toHaveBeenCalledWith('ur1');
       expect(res).toBe('removed');
+    });
+  });
+
+  describe('removeByUser', () => {
+    it('delegates with userId', async () => {
+      service.removeByUser.mockResolvedValue({ message: 'User role deleted successfully' } as any);
+      const res = await controller.removeByUser('u1');
+      expect(service.removeByUser).toHaveBeenCalledWith('u1');
+      expect(res).toEqual({ message: 'User role deleted successfully' });
     });
   });
 });

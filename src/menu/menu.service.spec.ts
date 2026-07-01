@@ -17,6 +17,12 @@ describe('MenuService', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
+      userRole: {
+        findMany: jest.fn(),
+      },
+      roleMenu: {
+        findMany: jest.fn(),
+      },
     };
 
     const helperMock = {
@@ -130,6 +136,88 @@ describe('MenuService', () => {
         where: { id: '1' },
       });
       expect(result).toEqual({ data: deletedMenu, message: 'Menu deleted successfully' });
+    });
+  });
+
+  describe('findHierarchical', () => {
+    it('should build hierarchical menu and handle standalone, groups and remaining top-level items', async () => {
+      const mockMenus = [
+        { id: 'm-dash', name: 'Dashboard', icon: 'HomeIcon', createdAt: new Date() },
+        { id: 'm-sales-dash', name: 'Sales Dashboard', icon: 'SalesIcon', createdAt: new Date() },
+        { id: 'm-sales-orders', name: 'Sales Orders', icon: null, createdAt: new Date() },
+        { id: 'm-custom1', name: 'Custom One', icon: 'Star', createdAt: new Date() },
+        { id: 'm-custom2', name: 'Custom Two', icon: null, createdAt: new Date() },
+      ];
+
+      (prisma.menu.findMany as jest.Mock).mockResolvedValue(mockMenus);
+
+      const result = await service.findHierarchical();
+
+      expect(prisma.menu.findMany).toHaveBeenCalledWith({
+        orderBy: { createdAt: 'asc' },
+      });
+
+      expect(result.message).toBe('Hierarchical menus fetched successfully');
+      
+      // Standalone (Dashboard)
+      const dashboardItem = result.data.find(item => item.id === 'm-dash');
+      expect(dashboardItem).toBeDefined();
+      expect(dashboardItem.type).toBe('standalone');
+      expect(dashboardItem.icon).toBe('HomeIcon');
+
+      // Group (Sales)
+      const salesGroup = result.data.find(item => item.id === 'sales');
+      expect(salesGroup).toBeDefined();
+      expect(salesGroup.type).toBe('group');
+      expect(salesGroup.items).toHaveLength(2);
+      expect(salesGroup.items[0].id).toBe('m-sales-dash');
+      expect(salesGroup.items[1].id).toBe('m-sales-orders');
+
+      // Remaining standalone with icon
+      const customOne = result.data.find(item => item.id === 'm-custom1');
+      expect(customOne).toBeDefined();
+      expect(customOne.type).toBe('standalone');
+      expect(customOne.icon).toBe('Star');
+      expect(customOne.path).toBe('custom-one');
+
+      // Remaining standalone without icon falling back to 'Circle'
+      const customTwo = result.data.find(item => item.id === 'm-custom2');
+      expect(customTwo).toBeDefined();
+      expect(customTwo.type).toBe('standalone');
+      expect(customTwo.icon).toBe('Circle');
+      expect(customTwo.path).toBe('custom-two');
+    });
+  });
+
+  describe('findUserModule', () => {
+    it('should fetch user modules based on user roles', async () => {
+      const userId = 'user-123';
+      const mockUserRoles = [
+        { userId, roleId: 'role-1' },
+        { userId, roleId: 'role-2' },
+      ];
+      const mockRoleMenus = [
+        { id: 'rm-1', roleId: 'role-1', menuId: 'm-1', menu: { id: 'm-1', name: 'Menu 1' } },
+        { id: 'rm-2', roleId: 'role-2', menuId: 'm-2', menu: { id: 'm-2', name: 'Menu 2' } },
+      ];
+
+      (prisma.userRole.findMany as jest.Mock).mockResolvedValue(mockUserRoles);
+      (prisma.roleMenu.findMany as jest.Mock).mockResolvedValue(mockRoleMenus);
+
+      const result = await service.findUserModule(userId);
+
+      expect(prisma.userRole.findMany).toHaveBeenCalledWith({
+        where: { userId },
+      });
+      expect(prisma.roleMenu.findMany).toHaveBeenCalledWith({
+        where: { roleId: { in: ['role-1', 'role-2'] } },
+        include: { menu: true },
+      });
+      expect(result).toEqual({
+        data: mockRoleMenus,
+        total: 2,
+        message: 'User modules fetched successfully',
+      });
     });
   });
 });

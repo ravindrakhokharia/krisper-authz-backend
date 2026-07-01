@@ -16,6 +16,8 @@ describe('MenuController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
+      findHierarchical: jest.fn(),
+      findUserModule: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -59,6 +61,16 @@ describe('MenuController', () => {
       expect(service.findAll).toHaveBeenCalled();
       expect(result).toEqual(expectedResult);
     });
+
+    it('should call service.findHierarchical if hierarchical is true', async () => {
+      const expectedResult = { data: [], message: 'Hierarchical menus fetched successfully' };
+      service.findHierarchical.mockResolvedValue(expectedResult as any);
+
+      const result = await controller.findAll(true);
+
+      expect(service.findHierarchical).toHaveBeenCalled();
+      expect(result).toEqual(expectedResult);
+    });
   });
 
   describe('findOne', () => {
@@ -97,6 +109,19 @@ describe('MenuController', () => {
       const result = await controller.remove(id);
 
       expect(service.remove).toHaveBeenCalledWith(id);
+      expect(result).toEqual(expectedResult);
+    });
+  });
+
+  describe('findUserModule', () => {
+    it('should call service.findUserModule with id', async () => {
+      const id = '1';
+      const expectedResult = { data: [], total: 0, message: 'User modules fetched successfully' };
+      service.findUserModule.mockResolvedValue(expectedResult as any);
+
+      const result = await controller.findUserModule(id);
+
+      expect(service.findUserModule).toHaveBeenCalledWith(id);
       expect(result).toEqual(expectedResult);
     });
   });
