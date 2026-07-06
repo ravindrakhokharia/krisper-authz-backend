@@ -14,20 +14,20 @@ const menus = [
   { name: 'Invoices & Payments', icon: 'Receipt' },
   { name: 'Client Credit', icon: 'CreditCard' },
   // Purchase
-  { name: 'Purchase Order', icon: 'ShoppingBag' },
+  // { name: 'Purchase Order', icon: 'ShoppingBag' },
   // Products & Production
-  { name: 'Product Dashboard', icon: 'BarChart3' },
-  { name: 'Product Catalog', icon: 'Package' },
-  { name: 'Product Configuration', icon: 'Box' },
-  { name: 'Bill of Materials', icon: 'FileText' },
-  { name: 'Work Orders', icon: 'Factory' },
+  // { name: 'Product Dashboard', icon: 'BarChart3' },
+  // { name: 'Product Configuration', icon: 'Box' },
+  // { name: 'Bill of Materials', icon: 'FileText' },
+  // { name: 'Work Orders', icon: 'Factory' },
   // Operations
   { name: 'Operations Dashboard', icon: 'Activity' },
+  { name: 'Product Catalog', icon: 'Package' },
   { name: 'Inventory Management', icon: 'Warehouse' },
-  { name: 'Stock Ledger', icon: 'FileText' },
-  { name: 'Material Transactions', icon: 'ArrowRightLeft' },
-  { name: 'Inventory', icon: 'Package' },
-  { name: 'Planning', icon: 'Calendar' },
+  // { name: 'Stock Ledger', icon: 'FileText' },
+  // { name: 'Material Transactions', icon: 'ArrowRightLeft' },
+  // { name: 'Inventory', icon: 'Package' },
+  // { name: 'Planning', icon: 'Calendar' },
   // HR & Payroll
   { name: 'HR Dashboard', icon: 'UserCog' },
   { name: 'Employees', icon: 'UsersRound' },
@@ -39,10 +39,10 @@ const menus = [
   { name: 'Statutory Compliance', icon: 'Shield' },
   { name: 'Performance Appraisal', icon: 'Award' },
   // Reports
-  { name: 'Reports', icon: 'FileText' },
+  // { name: 'Reports', icon: 'FileText' },
   // Configuration
-  { name: 'Workflows', icon: 'Workflow' },
-  { name: 'Schema Builder', icon: 'Database' },
+  // { name: 'Workflows', icon: 'Workflow' },
+  // { name: 'Schema Builder', icon: 'Database' },
   { name: 'Admin Settings', icon: 'Settings' },
   // Business
   { name: 'Business Dashboard', icon: 'LayoutDashboard' },

@@ -85,33 +85,33 @@ export class MenuService {
           { name: 'client credit', path: 'credit-credit' },
         ],
       },
-      {
-        id: 'purchase',
-        name: 'Purchase',
-        icon: 'ShoppingBag',
-        path: 'purchase',
-        type: 'group' as const,
-        matchItems: [
-          { name: 'purchase order', path: 'purchase/purchase-orders' },
-        ],
-      },
-      {
-        id: 'products-production',
-        name: 'Products & Production',
-        icon: 'Factory',
-        path: 'products-production',
-        type: 'group' as const,
-        matchItems: [
-          { name: 'product dashboard', path: 'products/product-dashboard' },
-          { name: 'product catalog', path: 'products/product-catalog' },
-          {
-            name: 'product configuration',
-            path: 'products/product-configuration',
-          },
-          { name: 'bill of materials', path: 'products/bill-of-materials' },
-          { name: 'work orders', path: 'products/work-orders' },
-        ],
-      },
+      // {
+      //   id: 'purchase',
+      //   name: 'Purchase',
+      //   icon: 'ShoppingBag',
+      //   path: 'purchase',
+      //   type: 'group' as const,
+      //   matchItems: [
+      //     { name: 'purchase order', path: 'purchase/purchase-orders' },
+      //   ],
+      // },
+      // {
+      //   id: 'products-production',
+      //   name: 'Products & Production',
+      //   icon: 'Factory',
+      //   path: 'products-production',
+      //   type: 'group' as const,
+      //   matchItems: [
+      //     { name: 'product dashboard', path: 'products/product-dashboard' },
+      //     { name: 'product catalog', path: 'products/product-catalog' },
+      //     {
+      //       name: 'product configuration',
+      //       path: 'products/product-configuration',
+      //     },
+      //     { name: 'bill of materials', path: 'products/bill-of-materials' },
+      //     { name: 'work orders', path: 'products/work-orders' },
+      //   ],
+      // },
       {
         id: 'operations',
         name: 'Operations',
@@ -123,17 +123,18 @@ export class MenuService {
             name: 'operations dashboard',
             path: 'operations/operations-dashboard',
           },
+          { name: 'product catalog', path: 'operations/product-catalog' },
           {
             name: 'inventory management',
             path: 'operations/inventory-management',
           },
-          { name: 'stock ledger', path: 'operations/stock-ledger' },
-          {
-            name: 'material transactions',
-            path: 'operations/material-transactions',
-          },
-          { name: 'inventory', path: 'operations/inventory' },
-          { name: 'planning', path: 'operations/planning' },
+          // { name: 'stock ledger', path: 'operations/stock-ledger' },
+          // {
+          //   name: 'material transactions',
+          //   path: 'operations/material-transactions',
+          // },
+          // { name: 'inventory', path: 'operations/inventory' },
+          // { name: 'planning', path: 'operations/planning' },
         ],
       },
       {
@@ -181,14 +182,14 @@ export class MenuService {
           },
         ],
       },
-      {
-        id: 'reports',
-        name: 'Reports',
-        icon: 'FileText',
-        path: 'reports',
-        type: 'standalone' as const,
-        matchItems: [{ name: 'reports', path: 'reports' }],
-      },
+      // {
+      //   id: 'reports',
+      //   name: 'Reports',
+      //   icon: 'FileText',
+      //   path: 'reports',
+      //   type: 'standalone' as const,
+      //   matchItems: [{ name: 'reports', path: 'reports' }],
+      // },
       {
         id: 'configuration',
         name: 'Configuration',
@@ -196,8 +197,8 @@ export class MenuService {
         path: 'configuration',
         type: 'group' as const,
         matchItems: [
-          { name: 'workflows', path: 'configuration/workflows' },
-          { name: 'schema builder', path: 'configuration/schema-builder' },
+          // { name: 'workflows', path: 'configuration/workflows' },
+          // { name: 'schema builder', path: 'configuration/schema-builder' },
           { name: 'admin settings', path: 'configuration/admin-settings' },
         ],
       },
@@ -210,9 +211,7 @@ export class MenuService {
     for (const definition of hierarchyDefinition) {
       if (definition.type === 'standalone') {
         const matchItem = definition.matchItems[0];
-        const item = menus.find(
-          (m) => m.name.toLowerCase() === matchItem.name,
-        );
+        const item = menus.find((m) => m.name.toLowerCase() === matchItem.name);
         if (item) {
           result.push({
             id: item.id,
@@ -227,9 +226,7 @@ export class MenuService {
         // Use map to preserve the order defined in matchItems
         const subItems = definition.matchItems
           .map((mi) => {
-            const menu = menus.find(
-              (m) => m.name.toLowerCase() === mi.name,
-            );
+            const menu = menus.find((m) => m.name.toLowerCase() === mi.name);
             return menu ? { ...menu, path: mi.path } : null;
           })
           .filter((m) => m !== null);
