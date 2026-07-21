@@ -5,10 +5,10 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
+import { OAUTH_API_URL } from 'src/shared/constants/constant';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { OAUTH_API_URL } from 'src/shared/constants/constant';
 
 @Injectable()
 export class RoleService {
@@ -20,7 +20,14 @@ export class RoleService {
   async create(createRoleDto: CreateRoleDto, loginUser?: any) {
     const userIds = [...new Set(createRoleDto.userIds || [])];
     const menuIds = [...new Set(createRoleDto.menuIds || [])];
-    const loginUserId = typeof loginUser === 'string' ? loginUser : loginUser?.id;
+    const loginUserId =
+      typeof loginUser === 'string' ? loginUser : loginUser?.id;
+
+    if (userIds.length === 0 || menuIds.length === 0) {
+      throw new BadRequestException(
+        'At least one user and permission must be assigned to create a role',
+      );
+    }
 
     const existingRole = await this.prisma.role.findUnique({
       where: { name: createRoleDto.name },
@@ -155,7 +162,8 @@ export class RoleService {
       ...role,
       isDeletable: role.createdBy !== 'SYSTEM',
       isEditable: role.createdBy !== 'SYSTEM',
-      isAssigned: role.userRoles?.some((ur) => ur.userId === loginUser?.id) || false,
+      isAssigned:
+        role.userRoles?.some((ur) => ur.userId === loginUser?.id) || false,
     }));
 
     return { data: rolesWithAssigned, message: 'Roles fetched successfully' };
@@ -228,7 +236,9 @@ export class RoleService {
 
     if (existingRole.createdBy === 'SYSTEM') {
       if (updateRoleDto.name && updateRoleDto.name !== existingRole.name) {
-        throw new BadRequestException('Role name cannot be modified for System roles');
+        throw new BadRequestException(
+          'Role name cannot be modified for System roles',
+        );
       }
     }
 
