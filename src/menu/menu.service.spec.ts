@@ -26,7 +26,10 @@ describe('MenuService', () => {
     };
 
     const helperMock = {
-      capitalize: jest.fn((val: string) => val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()),
+      capitalize: jest.fn(
+        (val: string) =>
+          val.charAt(0).toUpperCase() + val.slice(1).toLowerCase(),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,9 +52,15 @@ describe('MenuService', () => {
   describe('create', () => {
     it('should return existing menu if it already exists', async () => {
       const createMenuDto = { name: 'dashboard', icon: 'dashboard-icon' };
-      const existingMenu = { id: '1', name: 'Dashboard', icon: 'dashboard-icon' };
-      
-      (prisma.menu.findUnique as jest.Mock).mockResolvedValue(existingMenu as any);
+      const existingMenu = {
+        id: '1',
+        name: 'Dashboard',
+        icon: 'dashboard-icon',
+      };
+
+      (prisma.menu.findUnique as jest.Mock).mockResolvedValue(
+        existingMenu as any,
+      );
 
       const result = await service.create(createMenuDto);
 
@@ -65,7 +74,7 @@ describe('MenuService', () => {
     it('should create a new menu if it does not exist', async () => {
       const createMenuDto = { name: 'settings', icon: 'settings-icon' };
       const newMenu = { id: '2', name: 'Settings', icon: 'settings-icon' };
-      
+
       (prisma.menu.findUnique as jest.Mock).mockResolvedValue(null);
       (prisma.menu.create as jest.Mock).mockResolvedValue(newMenu as any);
 
@@ -77,13 +86,19 @@ describe('MenuService', () => {
       expect(prisma.menu.create).toHaveBeenCalledWith({
         data: { name: 'Settings', icon: 'settings-icon' },
       });
-      expect(result).toEqual({ data: newMenu, message: 'Menu created successfully' });
+      expect(result).toEqual({
+        data: newMenu,
+        message: 'Menu created successfully',
+      });
     });
   });
 
   describe('findAll', () => {
     it('should return all menus', async () => {
-      const menus = [{ id: '1', name: 'Menu 1' }, { id: '2', name: 'Menu 2' }];
+      const menus = [
+        { id: '1', name: 'Menu 1' },
+        { id: '2', name: 'Menu 2' },
+      ];
       (prisma.menu.findMany as jest.Mock).mockResolvedValue(menus as any);
 
       const result = await service.findAll();
@@ -91,7 +106,10 @@ describe('MenuService', () => {
       expect(prisma.menu.findMany).toHaveBeenCalledWith({
         orderBy: { createdAt: 'asc' },
       });
-      expect(result).toEqual({ data: menus, message: 'Menus fetched successfully' });
+      expect(result).toEqual({
+        data: menus,
+        message: 'Menus fetched successfully',
+      });
     });
   });
 
@@ -105,7 +123,10 @@ describe('MenuService', () => {
       expect(prisma.menu.findUnique).toHaveBeenCalledWith({
         where: { id: '1' },
       });
-      expect(result).toEqual({ data: menu, message: 'Menu fetched successfully' });
+      expect(result).toEqual({
+        data: menu,
+        message: 'Menu fetched successfully',
+      });
     });
   });
 
@@ -121,7 +142,10 @@ describe('MenuService', () => {
         where: { id: '1' },
         data: updateMenuDto,
       });
-      expect(result).toEqual({ data: updatedMenu, message: 'Menu updated successfully' });
+      expect(result).toEqual({
+        data: updatedMenu,
+        message: 'Menu updated successfully',
+      });
     });
   });
 
@@ -135,18 +159,46 @@ describe('MenuService', () => {
       expect(prisma.menu.delete).toHaveBeenCalledWith({
         where: { id: '1' },
       });
-      expect(result).toEqual({ data: deletedMenu, message: 'Menu deleted successfully' });
+      expect(result).toEqual({
+        data: deletedMenu,
+        message: 'Menu deleted successfully',
+      });
     });
   });
 
   describe('findHierarchical', () => {
     it('should build hierarchical menu and handle standalone, groups and remaining top-level items', async () => {
       const mockMenus = [
-        { id: 'm-dash', name: 'Dashboard', icon: 'HomeIcon', createdAt: new Date() },
-        { id: 'm-sales-dash', name: 'Sales Dashboard', icon: 'SalesIcon', createdAt: new Date() },
-        { id: 'm-sales-orders', name: 'Sales Orders', icon: null, createdAt: new Date() },
-        { id: 'm-custom1', name: 'Custom One', icon: 'Star', createdAt: new Date() },
-        { id: 'm-custom2', name: 'Custom Two', icon: null, createdAt: new Date() },
+        {
+          id: 'm-dash',
+          name: 'Dashboard',
+          icon: 'HomeIcon',
+          createdAt: new Date(),
+        },
+        {
+          id: 'm-sales-dash',
+          name: 'Sales Dashboard',
+          icon: 'SalesIcon',
+          createdAt: new Date(),
+        },
+        {
+          id: 'm-sales-orders',
+          name: 'Sales Orders',
+          icon: null,
+          createdAt: new Date(),
+        },
+        {
+          id: 'm-custom1',
+          name: 'Custom One',
+          icon: 'Star',
+          createdAt: new Date(),
+        },
+        {
+          id: 'm-custom2',
+          name: 'Custom Two',
+          icon: null,
+          createdAt: new Date(),
+        },
       ];
 
       (prisma.menu.findMany as jest.Mock).mockResolvedValue(mockMenus);
@@ -158,15 +210,15 @@ describe('MenuService', () => {
       });
 
       expect(result.message).toBe('Hierarchical menus fetched successfully');
-      
+
       // Standalone (Dashboard)
-      const dashboardItem = result.data.find(item => item.id === 'm-dash');
+      const dashboardItem = result.data.find((item) => item.id === 'm-dash');
       expect(dashboardItem).toBeDefined();
       expect(dashboardItem.type).toBe('standalone');
       expect(dashboardItem.icon).toBe('HomeIcon');
 
       // Group (Sales)
-      const salesGroup = result.data.find(item => item.id === 'sales');
+      const salesGroup = result.data.find((item) => item.id === 'sales');
       expect(salesGroup).toBeDefined();
       expect(salesGroup.type).toBe('group');
       expect(salesGroup.items).toHaveLength(2);
@@ -174,14 +226,14 @@ describe('MenuService', () => {
       expect(salesGroup.items[1].id).toBe('m-sales-orders');
 
       // Remaining standalone with icon
-      const customOne = result.data.find(item => item.id === 'm-custom1');
+      const customOne = result.data.find((item) => item.id === 'm-custom1');
       expect(customOne).toBeDefined();
       expect(customOne.type).toBe('standalone');
       expect(customOne.icon).toBe('Star');
       expect(customOne.path).toBe('custom-one');
 
       // Remaining standalone without icon falling back to 'Circle'
-      const customTwo = result.data.find(item => item.id === 'm-custom2');
+      const customTwo = result.data.find((item) => item.id === 'm-custom2');
       expect(customTwo).toBeDefined();
       expect(customTwo.type).toBe('standalone');
       expect(customTwo.icon).toBe('Circle');
@@ -197,8 +249,18 @@ describe('MenuService', () => {
         { userId, roleId: 'role-2' },
       ];
       const mockRoleMenus = [
-        { id: 'rm-1', roleId: 'role-1', menuId: 'm-1', menu: { id: 'm-1', name: 'Menu 1' } },
-        { id: 'rm-2', roleId: 'role-2', menuId: 'm-2', menu: { id: 'm-2', name: 'Menu 2' } },
+        {
+          id: 'rm-1',
+          roleId: 'role-1',
+          menuId: 'm-1',
+          menu: { id: 'm-1', name: 'Menu 1' },
+        },
+        {
+          id: 'rm-2',
+          roleId: 'role-2',
+          menuId: 'm-2',
+          menu: { id: 'm-2', name: 'Menu 2' },
+        },
       ];
 
       (prisma.userRole.findMany as jest.Mock).mockResolvedValue(mockUserRoles);

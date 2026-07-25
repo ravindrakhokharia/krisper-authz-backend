@@ -21,9 +21,7 @@ describe('RoleMenuController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RoleMenuController],
-      providers: [
-        { provide: RoleMenuService, useValue: serviceMock },
-      ],
+      providers: [{ provide: RoleMenuService, useValue: serviceMock }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -66,7 +64,10 @@ describe('RoleMenuController', () => {
   describe('findOne', () => {
     it('should call service.findOne with id', async () => {
       const id = '1';
-      const expectedResult = { data: Promise.resolve({ id }), message: 'success' };
+      const expectedResult = {
+        data: Promise.resolve({ id }),
+        message: 'success',
+      };
       service.findOne.mockReturnValue(expectedResult as any);
 
       const result = await controller.findOne(id);

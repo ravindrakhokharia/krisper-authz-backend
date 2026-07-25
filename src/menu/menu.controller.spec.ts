@@ -22,9 +22,7 @@ describe('MenuController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MenuController],
-      providers: [
-        { provide: MenuService, useValue: serviceMock },
-      ],
+      providers: [{ provide: MenuService, useValue: serviceMock }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -41,7 +39,10 @@ describe('MenuController', () => {
   describe('create', () => {
     it('should call service.create with dto', async () => {
       const dto: CreateMenuDto = { name: 'test', icon: 'test-icon' };
-      const expectedResult = { data: { id: '1', ...dto }, message: 'Menu created successfully' };
+      const expectedResult = {
+        data: { id: '1', ...dto },
+        message: 'Menu created successfully',
+      };
       service.create.mockResolvedValue(expectedResult as any);
 
       const result = await controller.create(dto);
@@ -53,7 +54,10 @@ describe('MenuController', () => {
 
   describe('findAll', () => {
     it('should call service.findAll', async () => {
-      const expectedResult = { data: [], message: 'Menus fetched successfully' };
+      const expectedResult = {
+        data: [],
+        message: 'Menus fetched successfully',
+      };
       service.findAll.mockResolvedValue(expectedResult as any);
 
       const result = await controller.findAll();
@@ -63,7 +67,10 @@ describe('MenuController', () => {
     });
 
     it('should call service.findHierarchical if hierarchical is true', async () => {
-      const expectedResult = { data: [], message: 'Hierarchical menus fetched successfully' };
+      const expectedResult = {
+        data: [],
+        message: 'Hierarchical menus fetched successfully',
+      };
       service.findHierarchical.mockResolvedValue(expectedResult as any);
 
       const result = await controller.findAll(true);
@@ -76,7 +83,10 @@ describe('MenuController', () => {
   describe('findOne', () => {
     it('should call service.findOne with id', async () => {
       const id = '1';
-      const expectedResult = { data: { id }, message: 'Menu fetched successfully' };
+      const expectedResult = {
+        data: { id },
+        message: 'Menu fetched successfully',
+      };
       service.findOne.mockResolvedValue(expectedResult as any);
 
       const result = await controller.findOne(id);
@@ -90,7 +100,10 @@ describe('MenuController', () => {
     it('should call service.update with id and dto', async () => {
       const id = '1';
       const dto: UpdateMenuDto = { name: 'updated' };
-      const expectedResult = { data: { id, ...dto }, message: 'Menu updated successfully' };
+      const expectedResult = {
+        data: { id, ...dto },
+        message: 'Menu updated successfully',
+      };
       service.update.mockResolvedValue(expectedResult as any);
 
       const result = await controller.update(id, dto);
@@ -103,7 +116,10 @@ describe('MenuController', () => {
   describe('remove', () => {
     it('should call service.remove with id', async () => {
       const id = '1';
-      const expectedResult = { data: { id }, message: 'Menu deleted successfully' };
+      const expectedResult = {
+        data: { id },
+        message: 'Menu deleted successfully',
+      };
       service.remove.mockResolvedValue(expectedResult as any);
 
       const result = await controller.remove(id);
@@ -116,7 +132,11 @@ describe('MenuController', () => {
   describe('findUserModule', () => {
     it('should call service.findUserModule with id', async () => {
       const id = '1';
-      const expectedResult = { data: [], total: 0, message: 'User modules fetched successfully' };
+      const expectedResult = {
+        data: [],
+        total: 0,
+        message: 'User modules fetched successfully',
+      };
       service.findUserModule.mockResolvedValue(expectedResult as any);
 
       const result = await controller.findUserModule(id);

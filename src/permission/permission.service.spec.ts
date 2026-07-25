@@ -62,7 +62,10 @@ describe('PermissionService', () => {
       expect(prisma.permission.create).toHaveBeenCalledWith({
         data: dto,
       });
-      expect(result).toEqual({ data: created, message: 'Permission created successfully' });
+      expect(result).toEqual({
+        data: created,
+        message: 'Permission created successfully',
+      });
     });
 
     it('propagates validation error', async () => {
@@ -88,7 +91,10 @@ describe('PermissionService', () => {
 
       const result = await service.findAll(query);
       expect(prisma.permission.findMany).toHaveBeenCalled();
-      expect(result).toEqual({ data: items, pagination: { offset: undefined, limit: undefined, total: 10 } });
+      expect(result).toEqual({
+        data: items,
+        pagination: { offset: undefined, limit: undefined, total: 10 },
+      });
     });
 
     it('applies actionId filter', async () => {
@@ -143,7 +149,10 @@ describe('PermissionService', () => {
       expect(prisma.permission.findUnique).toHaveBeenCalledWith({
         where: { id: 'perm-123' },
       });
-      expect(res).toEqual({ data: item, message: 'Permission fetched successfully' });
+      expect(res).toEqual({
+        data: item,
+        message: 'Permission fetched successfully',
+      });
     });
   });
 

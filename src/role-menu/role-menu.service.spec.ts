@@ -37,7 +37,9 @@ describe('RoleMenuService', () => {
 
     service = module.get<RoleMenuService>(RoleMenuService);
     prisma = module.get(PrismaService) as jest.Mocked<PrismaService>;
-    validationService = module.get(ValidationService) as jest.Mocked<ValidationService>;
+    validationService = module.get(
+      ValidationService,
+    ) as jest.Mocked<ValidationService>;
   });
 
   it('should be defined', () => {
@@ -48,7 +50,7 @@ describe('RoleMenuService', () => {
     it('should create a role menu after validation', async () => {
       const dto: CreateRoleMenuDto = { roleId: 'role1', menuId: 'menu1' };
       const createdRoleMenu = { id: '1', ...dto };
-      
+
       validationService.validateReferences.mockResolvedValue(undefined);
       prisma.roleMenu.create.mockResolvedValue(createdRoleMenu as any);
 
@@ -71,7 +73,11 @@ describe('RoleMenuService', () => {
 
   describe('findAll', () => {
     it('should return role menus based on query including roleId', async () => {
-      const query: QueryRoleMenuDto = { roleId: 'role1', limit: 10, offset: 0 } as any;
+      const query: QueryRoleMenuDto = {
+        roleId: 'role1',
+        limit: 10,
+        offset: 0,
+      } as any;
       const roleMenus = [{ id: '1', roleId: 'role1', menuId: 'menu1' }];
       prisma.roleMenu.findMany.mockResolvedValue(roleMenus as any);
       prisma.roleMenu.count.mockResolvedValue(1);
@@ -90,7 +96,11 @@ describe('RoleMenuService', () => {
     });
 
     it('should return role menus based on query including menuId', async () => {
-      const query: QueryRoleMenuDto = { menuId: 'menu1', limit: 10, offset: 0 } as any;
+      const query: QueryRoleMenuDto = {
+        menuId: 'menu1',
+        limit: 10,
+        offset: 0,
+      } as any;
       const roleMenus = [{ id: '1', roleId: 'role1', menuId: 'menu1' }];
       prisma.roleMenu.findMany.mockResolvedValue(roleMenus as any);
       prisma.roleMenu.count.mockResolvedValue(1);

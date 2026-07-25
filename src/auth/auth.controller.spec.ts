@@ -1,13 +1,13 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { Test, TestingModule } from '@nestjs/testing';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 class AuthServiceMock {
   validateUser = jest.fn();
 }
 
-describe("AuthController", () => {
+describe('AuthController', () => {
   let controller: AuthController;
   let service: AuthServiceMock;
 
@@ -21,12 +21,12 @@ describe("AuthController", () => {
     controller = module.get<AuthController>(AuthController);
   });
 
-  it("should be defined", () => {
+  it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it("should have authService injected", () => {
-    expect(controller["authService"]).toBeDefined();
-    expect(controller["authService"]).toBe(service);
+  it('should have authService injected', () => {
+    expect(controller['authService']).toBeDefined();
+    expect(controller['authService']).toBe(service);
   });
 });

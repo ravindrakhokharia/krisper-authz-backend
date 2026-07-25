@@ -77,7 +77,10 @@ describe('RolePermissionService', () => {
         },
       });
       expect(helperService.reloadModuleCasbin).toHaveBeenCalledWith('sales');
-      expect(res).toEqual({ data: created, message: 'Role permission created successfully' });
+      expect(res).toEqual({
+        data: created,
+        message: 'Role permission created successfully',
+      });
     });
 
     it('propagates validation errors and does not create', async () => {
@@ -103,7 +106,10 @@ describe('RolePermissionService', () => {
 
       const res = await service.findAll(query);
       expect(prisma.rolePermission.findMany).toHaveBeenCalled();
-      expect(res).toEqual({ data: items, pagination: { offset: undefined, limit: undefined, total: 1 } });
+      expect(res).toEqual({
+        data: items,
+        pagination: { offset: undefined, limit: undefined, total: 1 },
+      });
     });
 
     it('applies roleId and pagination', async () => {
@@ -150,7 +156,10 @@ describe('RolePermissionService', () => {
       expect(prisma.rolePermission.findUnique).toHaveBeenCalledWith({
         where: { id: 'rp-123' },
       });
-      expect(res).toEqual({ data: item, message: 'Role permission fetched successfully' });
+      expect(res).toEqual({
+        data: item,
+        message: 'Role permission fetched successfully',
+      });
     });
   });
 

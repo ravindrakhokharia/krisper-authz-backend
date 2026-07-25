@@ -1,4 +1,10 @@
-import { BadRequestException, ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
@@ -52,22 +58,26 @@ export class UserRoleService {
         (r: string) => r.toLowerCase() === 'super admin',
       );
       if (!isLoginUserSuperAdmin) {
-        throw new ForbiddenException('Only Super Admins can assign the Super Admin role.');
+        throw new ForbiddenException(
+          'Only Super Admins can assign the Super Admin role.',
+        );
       }
-      
+
       // Target user must not have other roles (except Owner)
       const hasIncompatibleRole = targetUserRolesLower.some(
         (r) => r !== 'owner' && r !== 'super admin',
       );
       if (hasIncompatibleRole) {
         throw new BadRequestException(
-          'Super Admin role cannot be assigned to a user who already has other roles (Manager, HR, etc.).'
+          'Super Admin role cannot be assigned to a user who already has other roles (Manager, HR, etc.).',
         );
       }
     } else if (!isOwnerRole) {
       // If assigning a non-Super Admin and non-Owner role, ensure the target user is not a Super Admin
       if (targetUserRolesLower.includes('super admin')) {
-        throw new BadRequestException(`Cannot assign role "${targetRole.name}" to a Super Admin user.`);
+        throw new BadRequestException(
+          `Cannot assign role "${targetRole.name}" to a Super Admin user.`,
+        );
       }
     }
 
@@ -147,8 +157,8 @@ export class UserRoleService {
   }
 
   async removeByUser(userId: string) {
-     await this.prisma.userRole.deleteMany({ where: { userId } });
+    await this.prisma.userRole.deleteMany({ where: { userId } });
 
-     return { message: 'User role deleted successfully' };
+    return { message: 'User role deleted successfully' };
   }
 }

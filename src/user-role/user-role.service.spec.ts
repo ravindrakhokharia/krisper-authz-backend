@@ -7,6 +7,8 @@ import { CreateUserRoleDto } from './dto/create-user-role.dto';
 import { QueryUserRoleDto } from './dto/query-user-role.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { AxiosError } from 'axios';
+import { of } from 'rxjs';
+import { throwError } from 'rxjs';
 
 describe('UserRoleService', () => {
   let service: UserRoleService;
@@ -74,7 +76,6 @@ describe('UserRoleService', () => {
       const userResp = { data: { data: { id: 'u1', roles: [] } } } as any;
       const updatedResp = { data: { ok: true } } as any;
 
-      const { of } = require('rxjs');
       http.get.mockReturnValue(of(userResp));
       http.put.mockReturnValue(of(updatedResp));
 
@@ -89,7 +90,10 @@ describe('UserRoleService', () => {
       });
       expect(http.get).toHaveBeenCalled();
       expect(http.put).toHaveBeenCalled();
-      expect(res).toEqual({ data: created, message: 'Role assigned successfully' });
+      expect(res).toEqual({
+        data: created,
+        message: 'Role assigned successfully',
+      });
     });
 
     it('handles case where user.roles is missing during OAuth update', async () => {
@@ -101,7 +105,6 @@ describe('UserRoleService', () => {
       const userResp = { data: { data: { id: 'u1' } } } as any;
       const updatedResp = { data: { ok: true } } as any;
 
-      const { of } = require('rxjs');
       http.get.mockReturnValue(of(userResp));
       http.put.mockReturnValue(of(updatedResp));
 
@@ -124,7 +127,6 @@ describe('UserRoleService', () => {
         data: { msg: 'oops' },
       } as any);
 
-      const { of, throwError } = require('rxjs');
       http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
       http.put.mockReturnValue(throwError(() => axiosErr));
 
@@ -149,7 +151,6 @@ describe('UserRoleService', () => {
       } as any);
       const genericErr = new Error('Generic failure');
 
-      const { of, throwError } = require('rxjs');
       http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
       http.put.mockReturnValue(throwError(() => genericErr));
 
@@ -170,7 +171,6 @@ describe('UserRoleService', () => {
         undefined,
       );
 
-      const { of, throwError } = require('rxjs');
       http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
       http.put.mockReturnValue(throwError(() => axiosErr));
 
@@ -193,7 +193,6 @@ describe('UserRoleService', () => {
         // response.data is missing
       } as any);
 
-      const { of, throwError } = require('rxjs');
       http.get.mockReturnValue(of({ data: { data: { id: 'u1', roles: [] } } }));
       http.put.mockReturnValue(throwError(() => axiosErr));
 
@@ -207,55 +206,70 @@ describe('UserRoleService', () => {
     });
 
     it('throws BadRequestException if role is not found', async () => {
-      const dto = { userId: 'u1', roleId: 'r-nonexistent' } as CreateUserRoleDto;
+      const dto = {
+        userId: 'u1',
+        roleId: 'r-nonexistent',
+      } as CreateUserRoleDto;
       (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce(null);
 
       await expect(service.create(dto)).rejects.toThrow('Role not found');
     });
 
     it('throws BadRequestException if user fetch fails', async () => {
-      const dto = { userId: 'u-nonexistent', roleId: 'r1' } as CreateUserRoleDto;
+      const dto = {
+        userId: 'u-nonexistent',
+        roleId: 'r1',
+      } as CreateUserRoleDto;
 
-      const { throwError } = require('rxjs');
       http.get.mockReturnValue(throwError(() => new Error('Not Found')));
 
-      await expect(service.create(dto)).rejects.toThrow('Invalid user ID or user not found');
+      await expect(service.create(dto)).rejects.toThrow(
+        'Invalid user ID or user not found',
+      );
     });
 
     it('throws ForbiddenException if non-Super Admin attempts to assign Super Admin role', async () => {
       const dto = { userId: 'u1', roleId: 'r-super' } as CreateUserRoleDto;
-      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'r-super', name: 'Super Admin' });
+      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: 'r-super',
+        name: 'Super Admin',
+      });
 
-      const { of } = require('rxjs');
       http.get.mockReturnValue(of({ data: { id: 'u1', roles: [] } }));
 
       const loginUser = { roles: ['Manager'] };
 
-      await expect(service.create(dto, loginUser)).rejects.toThrow('Only Super Admins can assign the Super Admin role.');
+      await expect(service.create(dto, loginUser)).rejects.toThrow(
+        'Only Super Admins can assign the Super Admin role.',
+      );
     });
 
     it('throws BadRequestException if assigning Super Admin role to user with incompatible roles', async () => {
       const dto = { userId: 'u1', roleId: 'r-super' } as CreateUserRoleDto;
-      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'r-super', name: 'Super Admin' });
+      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: 'r-super',
+        name: 'Super Admin',
+      });
 
-      const { of } = require('rxjs');
       http.get.mockReturnValue(of({ data: { id: 'u1', roles: ['Manager'] } }));
 
       const loginUser = { roles: ['Super Admin'] };
 
       await expect(service.create(dto, loginUser)).rejects.toThrow(
-        'Super Admin role cannot be assigned to a user who already has other roles (Manager, HR, etc.).'
+        'Super Admin role cannot be assigned to a user who already has other roles (Manager, HR, etc.).',
       );
     });
 
     it('allows assigning Super Admin role if loginUser is Super Admin and target user has only compatible roles', async () => {
       const dto = { userId: 'u1', roleId: 'r-super' } as CreateUserRoleDto;
-      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'r-super', name: 'Super Admin' });
+      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: 'r-super',
+        name: 'Super Admin',
+      });
 
       const created = { id: 'ur-1', role: { name: 'Super Admin' } } as any;
       (prisma.userRole.create as jest.Mock).mockResolvedValue(created);
 
-      const { of } = require('rxjs');
       http.get.mockReturnValue(of({ data: { id: 'u1', roles: ['owner'] } }));
       http.put.mockReturnValue(of({ data: { ok: true } }));
 
@@ -267,12 +281,18 @@ describe('UserRoleService', () => {
 
     it('throws BadRequestException if assigning non-Super Admin/Owner role to a Super Admin user', async () => {
       const dto = { userId: 'u1', roleId: 'r-manager' } as CreateUserRoleDto;
-      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'r-manager', name: 'Manager' });
+      (prisma.role.findUnique as jest.Mock).mockResolvedValueOnce({
+        id: 'r-manager',
+        name: 'Manager',
+      });
 
-      const { of } = require('rxjs');
-      http.get.mockReturnValue(of({ data: { id: 'u1', roles: ['Super Admin'] } }));
+      http.get.mockReturnValue(
+        of({ data: { id: 'u1', roles: ['Super Admin'] } }),
+      );
 
-      await expect(service.create(dto)).rejects.toThrow('Cannot assign role "Manager" to a Super Admin user.');
+      await expect(service.create(dto)).rejects.toThrow(
+        'Cannot assign role "Manager" to a Super Admin user.',
+      );
     });
   });
 
@@ -284,7 +304,10 @@ describe('UserRoleService', () => {
       (prisma.userRole.count as jest.Mock).mockResolvedValue(1);
       const res = await service.findAll(query);
       expect(prisma.userRole.findMany).toHaveBeenCalled();
-      expect(res).toEqual({ data: items, pagination: { offset: 0, limit: 100, total: 1 } });
+      expect(res).toEqual({
+        data: items,
+        pagination: { offset: 0, limit: 100, total: 1 },
+      });
     });
 
     it('filters by userId and pagination', async () => {
@@ -336,7 +359,10 @@ describe('UserRoleService', () => {
       expect(prisma.userRole.findUnique).toHaveBeenCalledWith({
         where: { id: 'ur-123' },
       });
-      expect(res).toEqual({ data: item, message: 'User role fetched successfully' });
+      expect(res).toEqual({
+        data: item,
+        message: 'User role fetched successfully',
+      });
     });
   });
 

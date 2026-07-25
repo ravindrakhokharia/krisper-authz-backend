@@ -177,7 +177,11 @@ describe('RoleService', () => {
         }),
       );
       expect(httpService.put).toHaveBeenCalledTimes(2);
-      expect(res.data).toEqual({ ...created, isDeletable: true, isEditable: true });
+      expect(res.data).toEqual({
+        ...created,
+        isDeletable: true,
+        isEditable: true,
+      });
     });
 
     it('should throw BadRequestException if user data is missing from OAuth', async () => {
@@ -380,9 +384,11 @@ describe('RoleService', () => {
         userRoles: [],
       } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
-      await expect(
-        service.update('r1', { name: 'new-name' }),
-      ).rejects.toThrow(new BadRequestException('Role name cannot be modified for System roles'));
+      await expect(service.update('r1', { name: 'new-name' })).rejects.toThrow(
+        new BadRequestException(
+          'Role name cannot be modified for System roles',
+        ),
+      );
     });
 
     it('handles complex updates with user/menu additions and removals', async () => {

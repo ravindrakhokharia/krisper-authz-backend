@@ -61,7 +61,10 @@ describe('ResourceService', () => {
       expect(prisma.resource.create).toHaveBeenCalledWith({
         data: dto,
       });
-      expect(res).toEqual({ data: created, message: 'Resource created successfully' });
+      expect(res).toEqual({
+        data: created,
+        message: 'Resource created successfully',
+      });
     });
   });
 
@@ -79,7 +82,10 @@ describe('ResourceService', () => {
         skip: 0,
         take: 20,
       });
-      expect(res).toEqual({ data, pagination: { offset: 0, limit: 20, total: 10 }});
+      expect(res).toEqual({
+        data,
+        pagination: { offset: 0, limit: 20, total: 10 },
+      });
     });
 
     it('filters by module', async () => {
@@ -109,7 +115,10 @@ describe('ResourceService', () => {
       expect(prisma.resource.findUnique).toHaveBeenCalledWith({
         where: { id: 'r-123' },
       });
-      expect(res).toEqual({ data: item, message: 'Resource fetched successfully' });
+      expect(res).toEqual({
+        data: item,
+        message: 'Resource fetched successfully',
+      });
     });
   });
 

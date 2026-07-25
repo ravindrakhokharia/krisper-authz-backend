@@ -86,7 +86,9 @@ describe('UserRoleController', () => {
 
   describe('removeByUser', () => {
     it('delegates with userId', async () => {
-      service.removeByUser.mockResolvedValue({ message: 'User role deleted successfully' } as any);
+      service.removeByUser.mockResolvedValue({
+        message: 'User role deleted successfully',
+      } as any);
       const res = await controller.removeByUser('u1');
       expect(service.removeByUser).toHaveBeenCalledWith('u1');
       expect(res).toEqual({ message: 'User role deleted successfully' });
