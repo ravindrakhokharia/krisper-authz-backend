@@ -153,7 +153,7 @@ export class MenuService {
           { name: 'transaction', path: 'business/transaction' },
           { name: 'expense', path: 'business/expense' },
           { name: 'wallet', path: 'business/wallet' },
-          { name: 'staff & partners', path: 'business/business-partner' },
+          { name: 'staff & partners', path: 'business/staff-and-partners' },
           { name: 'whatsapp chatbot', path: 'business/whatsapp-chatbot' },
           { name: 'business pos', path: 'pos' },
         ],
