@@ -147,6 +147,7 @@ export class MenuService {
           { name: 'business dashboard', path: 'business/dashboard' },
           { name: 'shop', path: 'business/shop' },
           { name: 'service', path: 'business/service' },
+          { name: 'service packages', path: 'business/service-packages' },
           { name: 'offers', path: 'business/offers' },
           { name: 'appointment', path: 'business/appointment' },
           { name: 'customer', path: 'business/customer' },

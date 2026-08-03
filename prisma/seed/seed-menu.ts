@@ -57,6 +57,7 @@ const menus = [
   { name: 'Staff & Partners', icon: 'UserCog' },
   { name: 'Whatsapp Chatbot', icon: 'Bot' },
   { name: 'Business Pos', icon: 'MonitorSmartphone' },
+  { name: 'Service Packages', icon: 'Package' },
 ];
 
 function delay(ms: number) {
