@@ -23,11 +23,11 @@ export class RoleService {
     const loginUserId =
       typeof loginUser === 'string' ? loginUser : loginUser?.id;
 
-    if (userIds.length === 0 || menuIds.length === 0) {
-      throw new BadRequestException(
-        'At least one user and permission must be assigned to create a role',
-      );
-    }
+    // if (userIds.length === 0 || menuIds.length === 0) {
+    //   throw new BadRequestException(
+    //     'At least one user and permission must be assigned to create a role',
+    //   );
+    // }
 
     const existingRole = await this.prisma.role.findUnique({
       where: { name: createRoleDto.name },
