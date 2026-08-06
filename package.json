@@ -73,18 +73,15 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
-    "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
-    },
     "collectCoverageFrom": [
-      "**/*.controller.(t|j)s",
-      "**/*.service.(t|j)s",
-      "!prisma/prisma.service.ts",
-      "!shared/services/validation.service.ts",
-      "!app.controller.ts",
-      "!app.service.ts"
+      "**/*.controller.ts",
+      "**/*.service.ts"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1",
+      "^prisma/(.*)$": "<rootDir>/../prisma/$1"
+    }
   }
 }
