@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
 import { AuthService } from '../auth.service';
 
 @Injectable()
@@ -13,13 +14,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      passReqToCallback: true,
       secretOrKey:
         configService.get<string>('JWT_SECRET') || 'default_jwt_secret_key',
     });
   }
 
-  async validate(payload: any) {
-    const user = await this.authService.validateUser(payload);
+  async validate(req: Request, payload: any) {
+    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req) ?? undefined;
+    const user = await this.authService.validateUser(payload, token);
     if (!user) {
       throw new UnauthorizedException('Invalid token or expired token');
     }

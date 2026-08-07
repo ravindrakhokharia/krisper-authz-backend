@@ -9,7 +9,7 @@ export class AuthService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {}
-  async validateUser(payload) {
+  async validateUser(payload, token?: string) {
     const userId = payload?.id || payload?.sub || payload?.userId;
     if (!userId) {
       throw new UnauthorizedException('Token payload is missing user id');
@@ -18,6 +18,28 @@ export class AuthService {
     const oauthApiUrl = this.configService.get<string>('OAUTH_API_URL');
     if (!oauthApiUrl) {
       throw new UnauthorizedException('OAUTH_API_URL is not configured');
+    }
+
+    if (token) {
+      let introspection;
+      try {
+        const response = await firstValueFrom(
+          this.httpService.post(`${oauthApiUrl}/oauth/introspect`, { token }),
+        );
+        introspection = response.data;
+      } catch {
+        throw new UnauthorizedException('Unable to validate token');
+      }
+
+      if (!introspection?.active) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          message: introspection?.isLogout
+            ? 'Token has been logged out'
+            : 'Invalid token or expired token',
+          isLogout: !!introspection?.isLogout,
+        });
+      }
     }
 
     let user;

@@ -17,6 +17,7 @@ describe('AuthService', () => {
 
   const httpMock = {
     get: jest.fn(),
+    post: jest.fn(),
   };
 
   const configMock = {
@@ -99,5 +100,37 @@ describe('AuthService', () => {
     await expect(service.validateUser(payload)).rejects.toThrow(
       'Unable to validate user from token',
     );
+  });
+
+  it('introspects the token when provided and succeeds when active', async () => {
+    const user = { data: { id: 'u1', oauthId: 'oauth-1' } };
+    const payload = { id: 'oauth-1' };
+    httpMock.post.mockReturnValue(of({ data: { active: true } }));
+    httpMock.get.mockReturnValue(of({ data: user }));
+
+    const result = await service.validateUser(payload, 'a-token');
+
+    expect(httpMock.post).toHaveBeenCalledWith(
+      'http://oauth-api/oauth/introspect',
+      { token: 'a-token' },
+    );
+    expect(result).toEqual(user.data);
+  });
+
+  it('throws UnauthorizedException with isLogout:true when the token was logged out', async () => {
+    const payload = { id: 'oauth-1' };
+    httpMock.post.mockReturnValue(
+      of({ data: { active: false, isLogout: true } }),
+    );
+
+    await expect(
+      service.validateUser(payload, 'a-token'),
+    ).rejects.toMatchObject({
+      response: {
+        statusCode: 401,
+        message: 'Token has been logged out',
+        isLogout: true,
+      },
+    });
   });
 });
