@@ -37,7 +37,7 @@ export class AuthService {
           message: introspection?.isLogout
             ? 'Token has been logged out'
             : 'Invalid token or expired token',
-          isLogout: !!introspection?.isLogout,
+          isLogout: true,
         });
       }
     }
