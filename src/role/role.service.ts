@@ -28,6 +28,11 @@ export class RoleService {
     //     'At least one user and permission must be assigned to create a role',
     //   );
     // }
+    if (createRoleDto.name.trim().toLowerCase() === 'super admin') {
+      throw new BadRequestException(
+        'You cannot create a role with the name "Super Admin"',
+      );
+    }
 
     const existingRole = await this.prisma.role.findUnique({
       where: { name: createRoleDto.name },
