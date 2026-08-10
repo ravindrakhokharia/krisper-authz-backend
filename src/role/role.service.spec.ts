@@ -270,6 +270,46 @@ describe('RoleService', () => {
       });
     });
 
+    it('returns seeded system roles for Admin user (excluding Super Admin)', async () => {
+      const items = [
+        { id: 'r1', name: 'Owner', createdBy: 'SYSTEM', userRoles: [] },
+        { id: 'r2', name: 'Staff', createdBy: 'SYSTEM', userRoles: [] },
+      ] as any[];
+      (prisma.role.findMany as jest.Mock).mockResolvedValue(items);
+      const res = await service.findAll({ id: 'u1', roles: ['Admin'] });
+      expect(prisma.role.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { name: { not: 'Super Admin' } },
+              {
+                OR: [
+                  { name: { in: ['Owner', 'Staff', 'Admin'] } },
+                  { createdBy: 'u1' },
+                  {
+                    userRoles: {
+                      some: {
+                        userId: 'u1',
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+      expect(res).toEqual({
+        data: items.map((item) => ({
+          ...item,
+          isDeletable: false,
+          isEditable: false,
+          isAssigned: false,
+        })),
+        message: 'Roles fetched successfully',
+      });
+    });
+
     it('returns only created or assigned roles for non-Super Admin user', async () => {
       const items = [
         { id: 'r1', name: 'admin', createdBy: 'u1', userRoles: [] },

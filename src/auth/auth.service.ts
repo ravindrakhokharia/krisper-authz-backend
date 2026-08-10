@@ -35,8 +35,8 @@ export class AuthService {
         throw new UnauthorizedException({
           statusCode: 401,
           message: introspection?.isLogout
-            ? 'Token has been logged out'
-            : 'Invalid token or expired token',
+            ? 'Your session has been logged out. Please log in again.'
+            : 'Your session has expired. Please log in again.',
           isLogout: true,
         });
       }

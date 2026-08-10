@@ -135,11 +135,19 @@ export class RoleService {
 
   async findAll(loginUser?: any) {
     const isSuperAdmin = loginUser?.roles?.includes('Super Admin');
-    const whereClause =
-      isSuperAdmin || !loginUser
-        ? {}
-        : {
+    const isAdmin = loginUser?.roles?.includes('Admin');
+
+    let whereClause: any;
+
+    if (isSuperAdmin || !loginUser) {
+      whereClause = {};
+    } else if (isAdmin) {
+      whereClause = {
+        AND: [
+          { name: { not: 'Super Admin' } },
+          {
             OR: [
+              { name: { in: ['Owner', 'Staff', 'Admin'] } },
               { createdBy: loginUser?.id },
               {
                 userRoles: {
@@ -149,7 +157,23 @@ export class RoleService {
                 },
               },
             ],
-          };
+          },
+        ],
+      };
+    } else {
+      whereClause = {
+        OR: [
+          { createdBy: loginUser?.id },
+          {
+            userRoles: {
+              some: {
+                userId: loginUser?.id,
+              },
+            },
+          },
+        ],
+      };
+    }
 
     const roles = await this.prisma.role.findMany({
       where: whereClause,

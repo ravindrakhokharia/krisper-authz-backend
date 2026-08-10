@@ -128,7 +128,7 @@ describe('AuthService', () => {
     ).rejects.toMatchObject({
       response: {
         statusCode: 401,
-        message: 'Token has been logged out',
+        message: 'Your session has been logged out. Please log in again.',
         isLogout: true,
       },
     });

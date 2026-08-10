@@ -10,7 +10,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (!user) {
       throw new UnauthorizedException({
         statusCode: 401,
-        message: 'Invalid token or expired token',
+        message: 'Your session has expired. Please log in again.',
         isLogout: true,
       });
     }
