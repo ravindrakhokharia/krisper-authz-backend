@@ -137,6 +137,10 @@ export class RoleService {
     const isSuperAdmin = loginUser?.roles?.includes('Super Admin');
     const isAdmin = loginUser?.roles?.includes('Admin');
 
+    const userRoleNames: string[] = Array.isArray(loginUser?.roles)
+      ? loginUser.roles
+      : [];
+
     let whereClause: any;
 
     if (isSuperAdmin || !loginUser) {
@@ -156,6 +160,9 @@ export class RoleService {
                   },
                 },
               },
+              ...(userRoleNames.length > 0
+                ? [{ name: { in: userRoleNames } }]
+                : []),
             ],
           },
         ],
@@ -171,6 +178,9 @@ export class RoleService {
               },
             },
           },
+          ...(userRoleNames.length > 0
+            ? [{ name: { in: userRoleNames } }]
+            : []),
         ],
       };
     }
@@ -187,12 +197,16 @@ export class RoleService {
       },
     });
 
+    const userRoleNamesLower = userRoleNames.map((r) => r.toLowerCase());
+
     const rolesWithAssigned = (roles || []).map((role) => ({
       ...role,
       isDeletable: role.createdBy !== 'SYSTEM',
       isEditable: role.createdBy !== 'SYSTEM',
       isAssigned:
-        role.userRoles?.some((ur) => ur.userId === loginUser?.id) || false,
+        role.userRoles?.some((ur) => ur.userId === loginUser?.id) ||
+        userRoleNamesLower.includes(role.name.toLowerCase()) ||
+        false,
     }));
 
     return { data: rolesWithAssigned, message: 'Roles fetched successfully' };

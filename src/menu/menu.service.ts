@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
@@ -9,7 +11,37 @@ export class MenuService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly helperService: HelperServices,
+    private readonly httpService: HttpService,
   ) {}
+
+  private async checkIfStaffHasNoShop(user?: any): Promise<boolean> {
+    if (!user) return false;
+    const userRoles: string[] = Array.isArray(user.roles) ? user.roles : [];
+    const isStaffOnly =
+      userRoles.length > 0 && userRoles.every((role) => role === 'Staff');
+
+    if (!isStaffOnly) {
+      return false;
+    }
+
+    try {
+      const shopApiUrl =
+        process.env.SHOP_API_URL || 'http://192.168.2.167:3005';
+      const authHeader = user.token ? `Bearer ${user.token}` : undefined;
+      await firstValueFrom(
+        this.httpService.get(`${shopApiUrl}/shop`, {
+          headers: {
+            ...(authHeader ? { Authorization: authHeader } : {}),
+            Connection: 'close',
+          },
+          timeout: 5000,
+        }),
+      );
+      return false;
+    } catch (error: any) {
+      return true;
+    }
+  }
 
   async create(createMenuDto: CreateMenuDto) {
     const capitalize = this.helperService.capitalize.bind(this.helperService);
@@ -41,12 +73,14 @@ export class MenuService {
     return { data: menus, message: 'Menus fetched successfully' };
   }
 
-  async findHierarchical() {
+  async findHierarchical(user?: any) {
     const menus = await this.prisma.menu.findMany({
       orderBy: {
         createdAt: 'asc',
       },
     });
+
+    const shouldDisableBusiness = await this.checkIfStaffHasNoShop(user);
 
     // Define the hierarchy structure mapping matching the frontend design
     // Each matchItem has { name, path } to include route paths in the response
@@ -210,9 +244,18 @@ export class MenuService {
     const groupedIds = new Set<string>();
 
     for (const definition of hierarchyDefinition) {
+      const isRestrictedGroup =
+        definition.id === 'business' || definition.id === 'operations';
       if (definition.type === 'standalone') {
         const matchItem = definition.matchItems[0];
         const item = menus.find((m) => m.name.toLowerCase() === matchItem.name);
+        const isRestrictedStandalone =
+          matchItem.path?.startsWith('business') ||
+          matchItem.path?.startsWith('operations') ||
+          isRestrictedGroup;
+        const isContentDisable =
+          isRestrictedStandalone && shouldDisableBusiness;
+
         if (item) {
           result.push({
             id: item.id,
@@ -220,11 +263,11 @@ export class MenuService {
             icon: item.icon || definition.icon,
             path: matchItem.path,
             type: 'standalone',
+            ...(isContentDisable && { isContentDisable: true }),
           });
           groupedIds.add(item.id);
         }
       } else {
-        // Use map to preserve the order defined in matchItems
         const subItems = definition.matchItems
           .map((mi) => {
             const menu = menus.find((m) => m.name.toLowerCase() === mi.name);
@@ -234,18 +277,31 @@ export class MenuService {
 
         if (subItems.length > 0) {
           subItems.forEach((m) => groupedIds.add(m.id));
+          const isContentDisableGroup =
+            isRestrictedGroup && shouldDisableBusiness;
+
           result.push({
             id: definition.id,
             name: definition.name,
             icon: definition.icon,
             path: definition.path,
             type: 'group',
-            items: subItems.map((m) => ({
-              id: m.id,
-              name: m.name,
-              icon: m.icon,
-              path: m.path,
-            })),
+            ...(isContentDisableGroup && { isContentDisable: true }),
+            items: subItems.map((m) => {
+              const isSubItemRestricted =
+                isRestrictedGroup ||
+                m.path?.startsWith('business') ||
+                m.path?.startsWith('operations');
+              const isSubContentDisable =
+                isSubItemRestricted && shouldDisableBusiness;
+              return {
+                id: m.id,
+                name: m.name,
+                icon: m.icon,
+                path: m.path,
+                ...(isSubContentDisable && { isContentDisable: true }),
+              };
+            }),
           });
         }
       }
@@ -254,12 +310,17 @@ export class MenuService {
     // Add any remaining menus at the top level
     const remaining = menus.filter((m) => !groupedIds.has(m.id));
     for (const item of remaining) {
+      const isRestrictedRemaining =
+        item.name.toLowerCase().includes('business') ||
+        item.name.toLowerCase().includes('operation');
+      const isContentDisable = isRestrictedRemaining && shouldDisableBusiness;
       result.push({
         id: item.id,
         name: item.name,
         icon: item.icon || 'Circle',
         path: item.name.toLowerCase().replace(/\s+/g, '-'),
         type: 'standalone',
+        ...(isContentDisable && { isContentDisable: true }),
       });
     }
 
@@ -306,11 +367,13 @@ export class MenuService {
       },
     });
 
-    const totalModules = roleMenu.length;
+    const uniqueRoleMenus = Array.from(
+      new Map(roleMenu.map((rm) => [rm.menuId, rm])).values(),
+    );
 
     return {
-      data: roleMenu,
-      total: totalModules,
+      data: uniqueRoleMenus,
+      total: uniqueRoleMenus.length,
       message: 'User modules fetched successfully',
     };
   }

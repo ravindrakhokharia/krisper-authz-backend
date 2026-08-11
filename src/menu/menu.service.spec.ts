@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpService } from '@nestjs/axios';
 import { MenuService } from './menu.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { HelperServices } from '../shared/helper/helper.services';
@@ -32,11 +33,17 @@ describe('MenuService', () => {
       ),
     };
 
+    const httpMock = {
+      get: jest.fn(),
+      post: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MenuService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: HelperServices, useValue: helperMock },
+        { provide: HttpService, useValue: httpMock },
       ],
     }).compile();
 

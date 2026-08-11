@@ -14,6 +14,7 @@ import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Req } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('Menu')
@@ -28,13 +29,15 @@ export class MenuController {
   }
 
   @Get()
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   findAll(
     @Query('hierarchical', new ParseBoolPipe({ optional: true }))
     hierarchical?: boolean,
+    @Req() req?: any,
   ) {
     if (hierarchical) {
-      return this.menuService.findHierarchical();
+      const token = req?.headers?.authorization?.replace(/^Bearer\s+/i, '');
+      return this.menuService.findHierarchical({ ...req?.user, token });
     }
     return this.menuService.findAll();
   }
