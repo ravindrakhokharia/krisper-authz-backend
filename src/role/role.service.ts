@@ -421,6 +421,21 @@ export class RoleService {
       }),
     );
 
+    if (updateRoleDto.isActive === false && existingUserIds.length > 0) {
+      try {
+        await firstValueFrom(
+          this.httpService.post(`${oauthApiUrl}/users/revoke-tokens`, {
+            userIds: existingUserIds,
+          }),
+        );
+      } catch (error) {
+        console.error(
+          'Failed to revoke tokens for users of deactivated role:',
+          error,
+        );
+      }
+    }
+
     return {
       data: {
         ...role,

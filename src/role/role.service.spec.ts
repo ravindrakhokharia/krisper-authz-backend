@@ -184,6 +184,43 @@ describe('RoleService', () => {
       });
     });
 
+    it('should revoke OAuth tokens when role isActive is updated to false', async () => {
+      const existing = {
+        id: 'r1',
+        name: 'manager',
+        isActive: true,
+        roleMenus: [],
+        userRoles: [{ userId: 'u1' }],
+      } as any;
+      (prisma.role.findUnique as jest.Mock).mockResolvedValue(existing);
+      (prisma.role.update as jest.Mock).mockResolvedValue({
+        ...existing,
+        isActive: false,
+      });
+      httpService.get.mockReturnValue(
+        of({
+          data: { data: { id: 'u1', roles: ['manager'] } },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
+        } as any),
+      );
+      httpService.put.mockReturnValue(
+        of({ data: { message: 'Updated' } } as any),
+      );
+      httpService.post.mockReturnValue(
+        of({ data: { message: 'Tokens revoked' } } as any),
+      );
+
+      await service.update('r1', { isActive: false });
+
+      expect(httpService.post).toHaveBeenCalledWith(
+        expect.stringContaining('/users/revoke-tokens'),
+        { userIds: ['u1'] },
+      );
+    });
+
     it('should throw BadRequestException if user data is missing from OAuth', async () => {
       const dto: CreateRoleDto = { name: 'staff', userIds: ['u1'] } as any;
       (prisma.role.findUnique as jest.Mock).mockResolvedValue(null);
